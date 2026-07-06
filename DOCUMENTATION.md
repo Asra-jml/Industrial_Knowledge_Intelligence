@@ -81,17 +81,18 @@ copy .env.example .env                          # then fill in keys (optional)
 
 | PRD requirement (F1) | Where implemented | Status |
 | --- | --- | --- |
-| Parse .pdf via pdfplumber | `backend/ingestion/parsers/pdf_parser.py` | pending |
-| Parse .csv/.md/.eml/.json/.txt natively | `backend/ingestion/parsers/` | pending |
-| P&ID .jpg via YOLO symbol detection + OCR | `backend/cv/` + `parsers/pid_parser.py` | pending |
-| Entities per `14_kg_metadata/ontology.md` | `backend/ingestion/extract/ontology.py`, `entities.py` | pending |
-| spaCy + regex + LLM extraction (PRD §6 stack) | `extract/entities.py`, `ner.py`, `llm_enrich.py` | pending |
-| Build 15 node types / 12+ edge types | `backend/ingestion/graph/builder.py` | pending |
-| Persist to Neo4j | `backend/ingestion/graph/neo4j_loader.py` | pending |
-| Idempotent, incremental re-ingest | `backend/ingestion/manifest.py` | pending |
-| Outputs: documents.jsonl, corpus_index.jsonl, graph.json | `backend/ingestion/writers.py` | pending |
-| Acceptance: P-101 one node, ≥90% linkage, add-a-file updates graph | `scripts/verify_f1.py` | pending |
-| Graph UI | `frontend/graph_viewer.html` + Neo4j Aura browser | pending |
+| Parse .pdf via pdfplumber | `backend/ingestion/parsers/pdf_parser.py` (per-page; scanned-PDF detection at <100 extractable chars) | done |
+| Parse .csv/.md/.eml/.json/.txt natively | `backend/ingestion/parsers/` (pandas CSV w/ BOM handling; markdown bold-metadata + Linked: lines; RFC-822 email w/ From/To/Cc persons; C-MAPSS descriptor mode) | done |
+| P&ID .jpg via YOLO symbol detection + OCR | `parsers/pid_parser.py` (ground-truth label stats per drawing) + `backend/cv/` (YOLOv8n fine-tune, inference demo, OCR tag pass) | done (training run pending) |
+| OCR scanned documents (pytesseract + Pillow) | `parsers/ocr.py` + pdf_parser fallback (renders pages via pypdfium2 → Tesseract; caps at 15 pages) | done |
+| Entities per `14_kg_metadata/ontology.md` | `extract/ontology.py` (known-tag set, alias map, regulation normalizer) + `extract/entities.py` (masked-regex, slash-shorthand expansion) | done |
+| spaCy + regex + LLM extraction (PRD §6 stack) | regex: `entities.py` · spaCy NER: `extract/ner.py` (PERSON, unstructured docs only) · LLM: `extract/llm_enrich.py` (xAI Grok/Groq, CSB/OISD PDFs, cached per file) | done |
+| Build 15 node types / 12+ edge types | `graph/builder.py` — 15 schema types + Procedure/LessonLearned extensions; 12 ontology edges + LINKED_TO extension | done |
+| Persist to Neo4j | `graph/neo4j_loader.py` (unique constraints, batched UNWIND MERGE, --reset, DB-name fallback) | done (smoke test pending) |
+| Idempotent, incremental re-ingest | `manifest.py` (SHA-256 + per-file contribution cache) + deterministic `writers.py` | done |
+| Outputs: documents.jsonl, corpus_index.jsonl, graph.json | `writers.py` → `SharedCorpus/shared/` | done |
+| Acceptance: P-101 one node, ≥90% linkage, add-a-file updates graph | `scripts/verify_f1.py` (7-check scorecard incl. live probe-file test) | pending first full run |
+| Graph UI | `frontend/graph_viewer.html` (vis-network, Golden Thread mode) + FastAPI `/api/graph` + Neo4j Aura browser | done |
 
 **ET brief technology coverage** (PRD §6.1): RAG → F2 (reads our `corpus_index.jsonl`) ·
 Knowledge Graphs & Ontology → F1 Neo4j + `ontology.md` · Computer Vision (P&ID) → F1 YOLO ·
