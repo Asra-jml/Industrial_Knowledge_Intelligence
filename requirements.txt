@@ -1,0 +1,27 @@
+# IKI backend — Python 3.14 (verified: all deps have cp314 wheels as of 2026-07)
+# Core ingestion (F1)
+pdfplumber>=0.11.10
+pillow>=11.0
+pytesseract>=0.3.13
+pandas>=2.3
+python-dotenv>=1.1
+
+# NLP / entity extraction (F1)
+spacy>=3.8.13
+# after install: python -m spacy download en_core_web_sm
+
+# LLM enrichment — OpenAI-compatible HTTP (works with xAI Grok AND Groq) (F1; also F2+)
+requests>=2.32
+
+# Knowledge graph (F1; read by F3/F4/F5)
+neo4j>=5.28
+
+# P&ID computer vision (F1)
+ultralytics>=8.3
+
+# API layer (all features)
+fastapi>=0.115
+uvicorn[standard]>=0.35
+
+# Tests
+pytest>=8.3
