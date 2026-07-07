@@ -130,7 +130,7 @@ def _worker(args: tuple[str, str]):
 
 def _parse_many(doc_ids: list[str], files: dict[str, Path], onto):
     """Yield (doc_id, contribution|None, error|None); parallel when it pays off."""
-    if len(doc_ids) < 24:
+    if len(doc_ids) < 999:  # sequential to avoid MemoryError on 475+ files
         for doc_id in doc_ids:
             try:
                 yield doc_id, process_file(doc_id, files[doc_id], onto), None
