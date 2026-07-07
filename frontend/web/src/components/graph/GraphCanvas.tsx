@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import type { GraphData, GraphNode, GraphEdge } from "@/lib/types";
+import type { GraphData } from "@/lib/types";
 import { NODE_COLORS, NODE_SIZES, DEFAULT_NODE_SIZE } from "@/lib/types";
 import { nHopNeighborhood } from "@/lib/graph-utils";
 
@@ -232,14 +232,7 @@ export default function GraphCanvas({
     ctx.restore();
   }, [hovered]);
 
-  // Animation loop
-  const tick = useCallback(() => {
-    simulate(nodesRef.current, edgesRef.current);
-    draw();
-    animRef.current = requestAnimationFrame(tick);
-  }, [simulate, draw]);
-
-  // Initialize
+  // Initialize + animation loop
   useEffect(() => {
     const { nodes, edges } = buildLayout();
     nodesRef.current = nodes;
@@ -250,9 +243,14 @@ export default function GraphCanvas({
       simulate(nodes, edges);
     }
 
-    animRef.current = requestAnimationFrame(tick);
+    const loop = () => {
+      simulate(nodesRef.current, edgesRef.current);
+      draw();
+      animRef.current = requestAnimationFrame(loop);
+    };
+    animRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animRef.current);
-  }, [buildLayout, simulate, tick]);
+  }, [buildLayout, simulate, draw]);
 
   // Resize canvas
   useEffect(() => {

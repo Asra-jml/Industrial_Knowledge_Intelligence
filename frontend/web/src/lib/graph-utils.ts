@@ -1,5 +1,5 @@
 /* Graph helper utilities — two-hop subgraph, search, etc. */
-import type { GraphData, GraphEdge, GraphNode } from "./types";
+import type { GraphEdge, GraphNode } from "./types";
 
 /** Compute the set of node IDs within N hops of a start node */
 export function nHopNeighborhood(
