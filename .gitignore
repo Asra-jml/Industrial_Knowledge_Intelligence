@@ -13,6 +13,7 @@ runs/
 *.pt
 backend/cv/dataset/
 backend/cv/*.log
+backend/cv/samples/
 
 # frontend (Next.js, added in F2)
 node_modules/

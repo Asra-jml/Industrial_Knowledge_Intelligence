@@ -83,7 +83,7 @@ copy .env.example .env                          # then fill in keys (optional)
 | --- | --- | --- |
 | Parse .pdf via pdfplumber | `backend/ingestion/parsers/pdf_parser.py` (per-page; scanned-PDF detection at <100 extractable chars) | done |
 | Parse .csv/.md/.eml/.json/.txt natively | `backend/ingestion/parsers/` (pandas CSV w/ BOM handling; markdown bold-metadata + Linked: lines; RFC-822 email w/ From/To/Cc persons; C-MAPSS descriptor mode) | done |
-| P&ID .jpg via YOLO symbol detection + OCR | `parsers/pid_parser.py` (ground-truth label stats per drawing) + `backend/cv/` (YOLOv8n fine-tune, inference demo, OCR tag pass) | done (training run pending) |
+| P&ID .jpg via YOLO symbol detection + OCR | `parsers/pid_parser.py` (ground-truth label stats per drawing) + `backend/cv/` (YOLOv8n fine-tune harness, detection samples, OCR tag pass) | done — demo uses ground-truth replay (quick fine-tune mAP50 0.004 recorded; overnight run recommended) |
 | OCR scanned documents (pytesseract + Pillow) | `parsers/ocr.py` + pdf_parser fallback (renders pages via pypdfium2 → Tesseract; caps at 15 pages) | done |
 | Entities per `14_kg_metadata/ontology.md` | `extract/ontology.py` (known-tag set, alias map, regulation normalizer) + `extract/entities.py` (masked-regex, slash-shorthand expansion) | done |
 | spaCy + regex + LLM extraction (PRD §6 stack) | regex: `entities.py` · spaCy NER: `extract/ner.py` (PERSON, unstructured docs only) · LLM: `extract/llm_enrich.py` (xAI Grok/Groq, CSB/OISD PDFs, cached per file) | done |
@@ -91,7 +91,7 @@ copy .env.example .env                          # then fill in keys (optional)
 | Persist to Neo4j | `graph/neo4j_loader.py` (unique constraints, batched UNWIND MERGE, --reset, DB-name fallback) | done (smoke test pending) |
 | Idempotent, incremental re-ingest | `manifest.py` (SHA-256 + per-file contribution cache) + deterministic `writers.py` | done |
 | Outputs: documents.jsonl, corpus_index.jsonl, graph.json | `writers.py` → `SharedCorpus/shared/` | done |
-| Acceptance: P-101 one node, ≥90% linkage, add-a-file updates graph | `scripts/verify_f1.py` (7-check scorecard incl. live probe-file test) | pending first full run |
+| Acceptance: P-101 one node, ≥90% linkage, add-a-file updates graph | `scripts/verify_f1.py` (11-check scorecard incl. live probe-file test) | **11/11 passed — 100% recall** (§6) |
 | Graph UI | `frontend/graph_viewer.html` (vis-network, Golden Thread mode) + FastAPI `/api/graph` + Neo4j Aura browser | done |
 
 **ET brief technology coverage** (PRD §6.1): RAG → F2 (reads our `corpus_index.jsonl`) ·
@@ -114,6 +114,7 @@ graph) · Agentic AI → F3/F5 (read our graph + index).
 | 2026-07-07 | Parallel parsing (ProcessPoolExecutor, cores−2) | Full corpus 18.5 min → ≈ 8 min, meeting the PRD < 10 min NFR; incremental stays ≈ 12 s |
 | 2026-07-07 | Neo4j nodes carry both `id` and their natural key field (`tag`, `wo_id`, …) | Judges' intuitive Cypher (`{tag:'P-101'}`) works, not just our internal id scheme |
 | 2026-07-07 | LessonLearned + Procedure node types and LINKED_TO edge added as documented schema extensions | LL-/SOP- records exist in the corpus but not in kg_schema.json; extensions are explicit, not silent |
+| 2026-07-07 | P&ID CV ships on ground-truth label replay + OCR; quick YOLOv8n fine-tune recorded at mAP50 0.004 (5 epochs / 512 px / CPU — insufficient for ~1,500 tiny symbols × 32 classes per drawing) | PRD explicitly allows "degrade gracefully to tag sidecars"; honest metric beats a hidden one. Rerun with `YOLO_EPOCHS=40 YOLO_IMGSZ=640` overnight for a real mAP |
 
 *(entries appended as tasks complete)*
 
@@ -185,9 +186,14 @@ RESULT: 11/11 checks passed
    `verify_f1.py` asserts automatically.)
 5. **Neo4j Aura** (30 s): `MATCH (e:Equipment {tag:'P-101'})-[r]-(x) RETURN *`
    → 58 relationships, 10 types. Real graph database, not a picture.
-6. **CV/OCR coverage** (30 s): `python -m backend.cv.detect_pid` — YOLOv8n fine-tuned on
-   the 400 labelled Digitize-PID drawings (mAP in `backend/cv/runs/`), plus OCR of the
-   scanned OISD regulation PDF (the one unreadable file in the corpus).
+6. **CV/OCR coverage** (30 s): `python -m backend.cv.detect_pid --ground-truth` —
+   annotated P&ID samples (90–120 symbols per drawing from the Digitize-PID labels,
+   in `backend/cv/samples/`) + live OCR reading tag text off the drawings; plus OCR of
+   the scanned OISD regulation PDF (the one unreadable file in the corpus). Say it
+   straight: a 35-min CPU fine-tune doesn't converge on 32 tiny-symbol classes
+   (mAP50 0.004 — recorded, not hidden); the training harness is one env var away
+   from an overnight GPU/CPU run, and the ground-truth path is the PRD's own
+   documented degradation.
 
 ## 8. Known limitations
 
