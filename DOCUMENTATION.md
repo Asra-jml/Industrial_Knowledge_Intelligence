@@ -109,6 +109,11 @@ graph) · Agentic AI → F3/F5 (read our graph + index).
 | 2026-07-06 | Replace the naive `SharedCorpus/ingest/ingest.py` baseline | It emitted only Document/Equipment nodes, had regex false positives, and bloated the index to 60k chunks (67 MB) by chunking NASA C-MAPSS sensor arrays |
 | 2026-07-06 | Outputs written to `SharedCorpus/shared/` (gitignored there) | PRD contract — teammates' F2–F5 read from that exact path |
 | 2026-07-06 | Desktop-first UI; mobile deferred. Landing page will be built in Next.js (`frontend/web/`), not standalone HTML | Team decision — one frontend framework for landing + app |
+| 2026-07-07 | Masked-regex extraction: specific record IDs (WO-, FR-, NCR-, INSP-…) matched and masked BEFORE the bare equipment pattern; survivors gated through the register-backed known-tag set | Kills the baseline's false positives ("WO-2026" was becoming a phantom pump); unknown-but-plausible tags stay as `candidate_tags`, never nodes |
+| 2026-07-07 | Calibration register added as a known-tag source (instruments like PIT-301) | Structured `instrument_tag` column is authoritative; keeps the invariant "every Equipment node is register-backed" |
+| 2026-07-07 | Parallel parsing (ProcessPoolExecutor, cores−2) | Full corpus 18.5 min → ≈ 8 min, meeting the PRD < 10 min NFR; incremental stays ≈ 12 s |
+| 2026-07-07 | Neo4j nodes carry both `id` and their natural key field (`tag`, `wo_id`, …) | Judges' intuitive Cypher (`{tag:'P-101'}`) works, not just our internal id scheme |
+| 2026-07-07 | LessonLearned + Procedure node types and LINKED_TO edge added as documented schema extensions | LL-/SOP- records exist in the corpus but not in kg_schema.json; extensions are explicit, not silent |
 
 *(entries appended as tasks complete)*
 
@@ -129,21 +134,67 @@ NCR→Regulation breaches).
 
 ## 6. Verification scorecard
 
-*(pasted from `scripts/verify_f1.py` after each milestone)*
+Run of `scripts/verify_f1.py` on 2026-07-07 (full corpus, pipeline 2026-07-07.3):
 
-## 7. Demo script for judges
+```
+F1 VERIFICATION SCORECARD
+============================================================
+  PASS  shared/ outputs exist (documents, corpus_index, graph)
+  PASS  exactly one canonical P-101 node  (found ['Equipment:P-101'])
+  PASS  P-101 carries asset-register properties  (make=Grundfos, model=CR 95-4, criticality=A)
+  PASS  golden-thread recall >= 90% (got 100%)  (all 21 expected records linked)
+  PASS  P-101 documents span >= 6 doc_types (got 12)
+  PASS  no sensor-array chunks in corpus_index  (8050 chunks total)
+  PASS  chunk count sane (8050 < 20000)
+  PASS  every Equipment node is in the known-tag set  (20 equipment nodes)
+  PASS  idempotency: re-run produces byte-identical outputs
+  PASS  add-a-file: new work order appears linked to P-101
+  PASS  remove-a-file: probe work order gone after re-ingest
+============================================================
+RESULT: 11/11 checks passed
+```
 
-*(finalized at the end of F1; outline)*
-1. `python -m backend.ingestion.run_ingest` — full corpus in minutes, incremental in seconds.
-2. Open `frontend/graph_viewer.html` → search **P-101** → click **Golden Thread**: one node
-   linked across inspections, work orders, failure, incident, NCR→CAPA, regulations, emails,
-   manual — the signals nobody connected, connected.
-3. Drop a new work-order file into the corpus → re-run ingest (seconds) → refresh viewer →
-   the new node/edges appear (**"continuously updated"** acceptance, live).
-4. Neo4j Aura browser: same graph in Cypher, e.g. `MATCH (e:Equipment {tag:'P-101'})-[r]-(n) RETURN *`.
-5. YOLO P&ID detection samples + OCR of the scanned OISD regulation (CV/OCR coverage).
+**Headline numbers for judges:**
+- 475 documents ingested across 9 formats → **664 nodes / 589 edges**, 17 node types, 13 edge types
+- **100% golden-thread recall** (PRD target ≥ 90%): every warning signal around the P-101
+  failure is connected to one node
+- P-101 linked across **12 document types** (emails, inspections, work orders, incident
+  reports, compliance register, manual, P&ID, permits…)
+- corpus_index: **8,050 quality chunks** vs 60,664 from the naive baseline (87% reduction —
+  sensor arrays excluded, CSV rows serialized row-level with tags)
+- Full ingest ≈ 8 min parallel / incremental re-ingest **≈ 12 s** including the Neo4j upsert
+- Neo4j Aura: 664 nodes / 589 relationships;
+  `MATCH (e:Equipment {tag:'P-101'})-[r]-(x) RETURN *` → 58 relationships, 10 types
+- pytest: 27/27 unit tests green
+
+## 7. Demo script for judges (~4 minutes)
+
+1. **The problem** (30 s): P-101 failed 2026-06-25. The warning signals existed — a
+   watch-item inspection (INSP-2026-0412), a field-tech email (May 28), an overdue
+   follow-up (INSP-2026-0615, inspector reassigned) — in four different systems.
+2. **Ingest** (30 s): `python -m backend.ingestion.run_ingest` → incremental run finishes
+   in ~12 s: *"475 documents, 8,050 chunks, 664 nodes, 589 edges + Neo4j upsert"*.
+3. **Golden Thread** (90 s): open `frontend/graph_viewer.html` → press **⭑ Golden Thread**.
+   P-101 (gold) at the center; the OVERDUE inspection glows red. Walk the chain out loud:
+   email → inspection → work orders → failure → incident → NCR → CAPA → Factories Act /
+   OISD → and SAME_CLASS_AS to P-102 (had the same near-miss in 2025) and **P-205 —
+   whose vibration is rising right now** (F3/F5 hook).
+4. **Continuously updated** (45 s): drop a new work-order markdown into
+   `SharedCorpus/07_work_orders/`, re-run ingest (~12 s), refresh viewer — the new node
+   is linked to P-101. Delete it, re-run — it's gone. (This is exactly what
+   `verify_f1.py` asserts automatically.)
+5. **Neo4j Aura** (30 s): `MATCH (e:Equipment {tag:'P-101'})-[r]-(x) RETURN *`
+   → 58 relationships, 10 types. Real graph database, not a picture.
+6. **CV/OCR coverage** (30 s): `python -m backend.cv.detect_pid` — YOLOv8n fine-tuned on
+   the 400 labelled Digitize-PID drawings (mAP in `backend/cv/runs/`), plus OCR of the
+   scanned OISD regulation PDF (the one unreadable file in the corpus).
 
 ## 8. Known limitations
+
+- **LLM enrichment currently inactive:** the configured xAI Grok key has no team credits
+  (API returns 403). The stage degrades gracefully (skipped, everything else works).
+  Fix: add credits at console.x.ai, **or** create a free Groq key at console.groq.com and
+  set `GROQ_API_KEY` in `.env` — the config auto-detects and prefers it.
 
 - The 400 P&ID drawings are generic public images (Digitize-PID dataset) — plant tags like
   P-101 come from the asset register (`pid_ref`), not from CV; the YOLO piece demonstrates

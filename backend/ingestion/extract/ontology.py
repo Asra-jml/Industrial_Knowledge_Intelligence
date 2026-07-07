@@ -143,6 +143,18 @@ def load_ontology(corpus_root: Path | None = None) -> Ontology:
                     "name", f"{col.replace('_tag', '').title()} for {tag}"
                 )
 
+    # --- calibration register: instruments are equipment too (e.g. PIT-301) ---
+    cal_path = root / "08_inspection_calibration" / "calibration_records.csv"
+    if cal_path.exists():
+        for row in _read_csv(cal_path):
+            tag = row.get("instrument_tag", "")
+            if tag:
+                onto.known_tags.add(tag)
+                onto.equipment_props.setdefault(tag, {}).setdefault(
+                    "name", row.get("instrument", "")
+                )
+                onto.equipment_props[tag].setdefault("equipment_type", "Instrument")
+
     # --- spare parts: known part numbers (part_no matches the bare tag regex) ---
     for fname in ("spare_parts_database.csv", "inventory_register.csv"):
         path = root / "09_inventory_spares" / fname

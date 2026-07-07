@@ -11,8 +11,10 @@ Stages: discover -> manifest diff -> parse -> extract -> contribute (cached)
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from backend.core import config
@@ -107,6 +109,40 @@ def process_file(doc_id: str, path: Path, onto) -> dict | None:
     return contribution
 
 
+# --- parallel parsing (PRD NFR: full corpus < 10 min on a laptop) ---
+_worker_onto = None
+
+
+def _init_worker():
+    global _worker_onto
+    from backend.ingestion.extract.ontology import load_ontology as _load
+
+    _worker_onto = _load()
+
+
+def _worker(args: tuple[str, str]):
+    doc_id, path_str = args
+    try:
+        return doc_id, process_file(doc_id, Path(path_str), _worker_onto), None
+    except Exception as exc:
+        return doc_id, None, str(exc)
+
+
+def _parse_many(doc_ids: list[str], files: dict[str, Path], onto):
+    """Yield (doc_id, contribution|None, error|None); parallel when it pays off."""
+    if len(doc_ids) < 24:
+        for doc_id in doc_ids:
+            try:
+                yield doc_id, process_file(doc_id, files[doc_id], onto), None
+            except Exception as exc:
+                yield doc_id, None, str(exc)
+        return
+    workers = max(2, (os.cpu_count() or 4) - 2)
+    with ProcessPoolExecutor(max_workers=workers, initializer=_init_worker) as pool:
+        args = [(d, str(files[d])) for d in doc_ids]
+        yield from pool.map(_worker, args, chunksize=8)
+
+
 def run(full: bool = False, use_neo4j: bool = True, reset: bool = False) -> dict:
     t0 = time.time()
     print(f"[ingest] corpus: {config.CORPUS_ROOT}")
@@ -125,18 +161,17 @@ def run(full: bool = False, use_neo4j: bool = True, reset: bool = False) -> dict
 
     contributions: list[dict] = []
     failures: list[str] = []
-    for i, doc_id in enumerate(plan["process"], 1):
-        try:
-            contribution = process_file(doc_id, files[doc_id], onto)
-        except Exception as exc:  # keep ingest running; report at the end
-            failures.append(f"{doc_id}: {exc}")
-            continue
-        if contribution is None:
-            continue
-        manifest.store_contribution(doc_id, files[doc_id], contribution)
-        contributions.append(contribution)
-        if i % 50 == 0 or i == len(plan["process"]):
-            print(f"[ingest] parsed {i}/{len(plan['process'])}")
+    total = len(plan["process"])
+    for i, (doc_id, contribution, error) in enumerate(
+        _parse_many(plan["process"], files, onto), 1
+    ):
+        if error:
+            failures.append(f"{doc_id}: {error}")
+        elif contribution is not None:
+            manifest.store_contribution(doc_id, files[doc_id], contribution)
+            contributions.append(contribution)
+        if i % 50 == 0 or i == total:
+            print(f"[ingest] parsed {i}/{total}")
 
     for doc_id in plan["reuse"]:
         contributions.append(manifest.load_contribution(doc_id))

@@ -12,6 +12,7 @@ venv/
 runs/
 *.pt
 backend/cv/dataset/
+backend/cv/*.log
 
 # frontend (Next.js, added in F2)
 node_modules/

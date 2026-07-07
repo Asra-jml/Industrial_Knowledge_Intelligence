@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(REPO_ROOT / ".env")
 
 # Bump to force a full re-parse after parser/extractor changes.
-PIPELINE_VERSION = "2026-07-06.2"
+PIPELINE_VERSION = "2026-07-07.3"
 
 
 def _path_from_env(var: str, default: Path) -> Path:

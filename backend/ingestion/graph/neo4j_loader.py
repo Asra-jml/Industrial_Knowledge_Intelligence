@@ -11,6 +11,17 @@ from backend.core import config, graph_store
 
 BATCH = 500
 
+# natural key field per label (kg_schema.json node_types + our documented
+# extensions) so Cypher like {tag:'P-101'} works, not just {id:'Equipment:P-101'}
+KEY_FIELD = {
+    "Equipment": "tag", "Document": "doc_id", "WorkOrder": "wo_id",
+    "Failure": "failure_id", "Inspection": "insp_id", "Calibration": "cal_id",
+    "NCR": "ncr_id", "CAPA": "capa_id", "Audit": "audit_id",
+    "Incident": "incident_id", "NearMiss": "nm_id", "Regulation": "name",
+    "Person": "name", "SparePart": "part_no", "Permit": "ptw_id",
+    "Procedure": "sop_id", "LessonLearned": "ll_id",
+}
+
 
 def load_graph(graph: dict, reset: bool = False) -> dict | None:
     driver = graph_store.get_neo4j_driver()
@@ -34,6 +45,7 @@ def load_graph(graph: dict, reset: bool = False) -> dict | None:
 
             node_count = 0
             for label in labels:
+                key_field = KEY_FIELD.get(label, "key")
                 rows = [
                     {"id": n["id"], "key": n["key"], "props": _clean(n["props"])}
                     for n in graph["nodes"]
@@ -43,7 +55,7 @@ def load_graph(graph: dict, reset: bool = False) -> dict | None:
                     session.run(
                         f"UNWIND $rows AS row "
                         f"MERGE (n:`{label}` {{id: row.id}}) "
-                        f"SET n.key = row.key, n += row.props",
+                        f"SET n.key = row.key, n.`{key_field}` = row.key, n += row.props",
                         rows=batch,
                     )
                 node_count += len(rows)
