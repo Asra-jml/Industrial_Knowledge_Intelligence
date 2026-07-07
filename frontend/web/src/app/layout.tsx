@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "IKI — Knowledge Graph | Industrial Knowledge Intelligence",
+  title: "IKI — Industrial Knowledge Intelligence",
   description:
-    "Interactive knowledge graph viewer for the Industrial Knowledge Intelligence platform. Visualize equipment relationships, failure chains, and compliance linkages across industrial documents.",
+    "The unified asset & operations brain. IKI ingests engineering drawings, maintenance records, regulatory documents and incident reports into one queryable knowledge graph.",
 };
 
 export default function RootLayout({
@@ -20,10 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased dark`}>
-      <body className="min-h-full flex flex-col bg-[var(--bg)]">
-        {children}
-      </body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+    >
+      <body className="min-h-full bg-bg">{children}</body>
     </html>
   );
 }

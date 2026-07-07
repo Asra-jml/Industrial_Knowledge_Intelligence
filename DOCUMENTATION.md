@@ -115,6 +115,8 @@ graph) · Agentic AI → F3/F5 (read our graph + index).
 | 2026-07-07 | Neo4j nodes carry both `id` and their natural key field (`tag`, `wo_id`, …) | Judges' intuitive Cypher (`{tag:'P-101'}`) works, not just our internal id scheme |
 | 2026-07-07 | LessonLearned + Procedure node types and LINKED_TO edge added as documented schema extensions | LL-/SOP- records exist in the corpus but not in kg_schema.json; extensions are explicit, not silent |
 | 2026-07-07 | P&ID CV ships on ground-truth label replay + OCR; quick YOLOv8n fine-tune recorded at mAP50 0.004 (5 epochs / 512 px / CPU — insufficient for ~1,500 tiny symbols × 32 classes per drawing) | PRD explicitly allows "degrade gracefully to tag sidecars"; honest metric beats a hidden one. Rerun with `YOLO_EPOCHS=40 YOLO_IMGSZ=640` overnight for a real mAP |
+| 2026-07-07 | Frontend design system (`frontend/web`): dark graphite tokens with ONE accent (steel blue #4DA3FF, same hue as the graph's Equipment nodes), Space Grotesk display + Inter body + JetBrains Mono data, hand-rolled shadcn-style primitives (`components/ui/`), framer-motion micro-interactions only (no particle/blob effects) | Premium, intentional look; 3 tiny deps (framer-motion, clsx, tailwind-merge) instead of a component-library payload; icon-name registry keeps pages as Server Components across the RSC boundary |
+| 2026-07-07 | Landing hero is a handcrafted animated SVG of the REAL P-101 golden thread (nodes/edges from the corpus), not stock art; module placeholders show each feature's live data contract | The marketing surface demonstrates the actual product data — judges see the same story on the landing page, in the viewer, and in Neo4j |
 
 *(entries appended as tasks complete)*
 

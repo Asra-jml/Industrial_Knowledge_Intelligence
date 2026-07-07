@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Sparkles, Eye, EyeOff, Maximize } from "lucide-react";
+import { Eye, EyeOff, Maximize, ServerCrash, Sparkles } from "lucide-react";
 import type { GraphData, GraphNode, IngestStatus } from "@/lib/types";
 import { fetchGraph, fetchIngestStatus } from "@/lib/api";
 import { searchNodes, countByType, nHopNeighborhood } from "@/lib/graph-utils";
@@ -10,6 +10,8 @@ import SearchBar from "@/components/graph/SearchBar";
 import Legend from "@/components/graph/Legend";
 import NodeDetail from "@/components/graph/NodeDetail";
 import StatsBar from "@/components/graph/StatsBar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function KnowledgeGraphPage() {
   const [graph, setGraph] = useState<GraphData | null>(null);
@@ -69,8 +71,7 @@ export default function KnowledgeGraphPage() {
 
   // Selected node object
   const selectedNode = useMemo<GraphNode | null>(
-    () =>
-      graph?.nodes.find((n) => n.id === selectedNodeId) ?? null,
+    () => graph?.nodes.find((n) => n.id === selectedNodeId) ?? null,
     [graph, selectedNodeId]
   );
 
@@ -118,7 +119,6 @@ export default function KnowledgeGraphPage() {
       if (!graph) return;
       const hit = searchNodes(graph.nodes, query);
       if (hit) {
-        // Ensure the type is visible
         setHiddenTypes((prev) => {
           const next = new Set(prev);
           next.delete(hit.type);
@@ -154,17 +154,25 @@ export default function KnowledgeGraphPage() {
   // Fit view
   const handleFit = useCallback(() => {
     setFocusNodeId(null);
-    // Reset zoom/pan will be handled by canvas
   }, []);
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[var(--text-muted)] text-sm">
-            Loading knowledge graph…
-          </p>
+      <div className="flex flex-1 flex-col">
+        <div className="flex items-center gap-3 border-b border-edge bg-surface px-4 py-2.5">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-9 w-44" />
+          <Skeleton className="h-9 w-36" />
+          <div className="ml-auto flex gap-2">
+            <Skeleton className="h-7 w-28" />
+            <Skeleton className="h-7 w-28" />
+          </div>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="space-y-3 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+            <p className="text-sm text-muted">Loading knowledge graph…</p>
+          </div>
         </div>
       </div>
     );
@@ -172,18 +180,16 @@ export default function KnowledgeGraphPage() {
 
   if (error || !graph) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="glass-card p-8 max-w-lg text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-[rgba(255,93,93,0.1)] flex items-center justify-center mx-auto">
-            <span className="text-2xl">⚠️</span>
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="max-w-lg rounded-xl border border-edge bg-surface p-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-danger/25 bg-danger/10">
+            <ServerCrash className="h-5 w-5 text-danger" />
           </div>
-          <h2 className="text-lg font-semibold text-[var(--danger)]">
-            Connection Error
+          <h2 className="font-display text-lg font-semibold text-fg">
+            Backend unreachable
           </h2>
-          <p className="text-[var(--text-muted)] text-sm leading-relaxed">
-            {error || "Failed to load the knowledge graph."}
-          </p>
-          <code className="block text-[12px] bg-[var(--bg)] p-3 rounded-lg text-[var(--accent)]">
+          <p className="mt-2 text-sm leading-relaxed text-muted">{error}</p>
+          <code className="mt-4 block rounded-lg border border-edge bg-bg p-3 font-mono text-[12px] text-accent">
             uvicorn backend.api.main:app --reload
           </code>
         </div>
@@ -192,45 +198,34 @@ export default function KnowledgeGraphPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[var(--bg)]">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-2.5 bg-[var(--panel)] border-b border-[var(--border)] flex-wrap z-10">
-        <h1 className="text-[15px] font-semibold mr-1 flex items-center gap-1.5">
-          <span className="text-[var(--accent)]">IKI</span>
-          <span className="text-[var(--text)]">Knowledge Graph</span>
-        </h1>
-
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* toolbar */}
+      <div className="z-10 flex flex-wrap items-center gap-2 border-b border-edge bg-surface px-4 py-2.5">
         <SearchBar onSearch={handleSearch} />
 
-        <button
+        <Button
+          variant="golden"
+          size="sm"
           onClick={handleGoldenToggle}
-          className={`golden-btn px-3 py-1.5 rounded-lg text-[13px] flex items-center gap-1.5 ${
-            goldenMode ? "active" : ""
-          }`}
+          className={goldenMode ? "active" : ""}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Sparkles className="h-3.5 w-3.5" />
           Golden Thread (P-101)
-        </button>
+        </Button>
 
-        <button
-          onClick={handleDocsToggle}
-          className="px-3 py-1.5 rounded-lg text-[13px] bg-[#223052] border border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
-        >
+        <Button variant="secondary" size="sm" onClick={handleDocsToggle}>
           {showDocs ? (
-            <EyeOff className="w-3.5 h-3.5" />
+            <EyeOff className="h-3.5 w-3.5" />
           ) : (
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="h-3.5 w-3.5" />
           )}
-          {showDocs ? "Hide" : "Show"} Documents
-        </button>
+          {showDocs ? "Hide" : "Show"} documents
+        </Button>
 
-        <button
-          onClick={handleFit}
-          className="px-3 py-1.5 rounded-lg text-[13px] bg-[#223052] border border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] transition-colors flex items-center gap-1.5"
-        >
-          <Maximize className="w-3.5 h-3.5" />
+        <Button variant="secondary" size="sm" onClick={handleFit}>
+          <Maximize className="h-3.5 w-3.5" />
           Fit
-        </button>
+        </Button>
 
         <div className="ml-auto">
           <StatsBar
@@ -242,12 +237,11 @@ export default function KnowledgeGraphPage() {
             goldenMode={goldenMode}
           />
         </div>
-      </header>
+      </div>
 
-      {/* Main content */}
-      <main className="flex-1 flex min-h-0">
-        {/* Graph canvas */}
-        <div className="flex-1 min-w-0">
+      {/* canvas + inspector */}
+      <div className="flex min-h-0 flex-1">
+        <div className="min-w-0 flex-1 bg-bg-secondary">
           <GraphCanvas
             graph={graph}
             hiddenTypes={hiddenTypes}
@@ -258,10 +252,8 @@ export default function KnowledgeGraphPage() {
           />
         </div>
 
-        {/* Side panel */}
-        <aside className="w-[320px] bg-[var(--panel)] border-l border-[var(--border)] flex flex-col min-h-0 panel-transition">
-          {/* Legend */}
-          <div className="p-3 border-b border-[var(--border)] overflow-y-auto max-h-[45%]">
+        <aside className="panel-transition flex w-[320px] shrink-0 flex-col border-l border-edge bg-surface max-lg:hidden">
+          <div className="max-h-[45%] overflow-y-auto border-b border-edge p-3">
             <Legend
               typeCounts={typeCounts}
               hiddenTypes={hiddenTypes}
@@ -269,10 +261,9 @@ export default function KnowledgeGraphPage() {
             />
           </div>
 
-          {/* Node detail */}
-          <div className="flex-1 p-3 overflow-y-auto">
-            <h3 className="text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2">
-              Details
+          <div className="flex-1 overflow-y-auto p-3">
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-dim">
+              Inspector
             </h3>
             <NodeDetail
               node={selectedNode}
@@ -282,7 +273,7 @@ export default function KnowledgeGraphPage() {
             />
           </div>
         </aside>
-      </main>
+      </div>
     </div>
   );
 }
