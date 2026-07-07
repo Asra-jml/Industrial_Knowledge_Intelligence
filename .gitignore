@@ -1,0 +1,24 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# ultralytics / model artifacts
+runs/
+*.pt
+backend/cv/dataset/
+backend/cv/*.log
+backend/cv/samples/
+
+# frontend (Next.js, added in F2)
+node_modules/
+.next/
+
+# OS
+Thumbs.db
+.DS_Store

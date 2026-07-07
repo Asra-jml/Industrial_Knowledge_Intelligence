@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IKI — Knowledge Graph Viewer</title>
+<script src="lib/vis-network.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1420; --panel: #171e2e; --border: #2a3550; --text: #e6ecf7;
+    --muted: #8fa0bf; --accent: #4da3ff; --danger: #ff5d5d;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  header { display: flex; gap: 10px; align-items: center; padding: 10px 14px; background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  header h1 { font-size: 15px; font-weight: 600; margin-right: 6px; }
+  header h1 span { color: var(--accent); }
+  input[type=search] { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; width: 230px; }
+  button, label.file { background: #223052; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  button:hover, label.file:hover { border-color: var(--accent); }
+  button.golden { background: #3a2d10; border-color: #a8842c; }
+  button.golden.active { background: #a8842c; color: #14161c; font-weight: 600; }
+  #stats { color: var(--muted); font-size: 12px; margin-left: auto; }
+  main { flex: 1; display: flex; min-height: 0; }
+  #network { flex: 1; }
+  aside { width: 320px; background: var(--panel); border-left: 1px solid var(--border); padding: 12px; overflow-y: auto; }
+  aside h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 10px 0 6px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; padding: 2px 0; font-size: 13px; cursor: pointer; user-select: none; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .legend-item.off { opacity: .35; }
+  .count { color: var(--muted); margin-left: auto; font-size: 12px; }
+  #detail { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 4px; }
+  #detail .nid { font-weight: 600; color: var(--accent); word-break: break-all; }
+  #detail table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.5px; }
+  #detail td { padding: 3px 4px; vertical-align: top; border-bottom: 1px solid #202a42; }
+  #detail td:first-child { color: var(--muted); white-space: nowrap; }
+  #detail .rel { padding: 2px 0; font-size: 12.5px; }
+  #detail .rel b { color: #ffd479; font-weight: 600; }
+  #detail .rel a { color: var(--accent); cursor: pointer; text-decoration: none; word-break: break-all; }
+  #hint { color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>IKI</span> Knowledge Graph</h1>
+  <input id="search" type="search" placeholder="Search: P-101, NCR-2026-014, …">
+  <button id="goldenBtn" class="golden">⭑ Golden Thread (P-101)</button>
+  <button id="docsBtn">Show documents</button>
+  <button id="fitBtn">Fit</button>
+  <label class="file">Load graph.json <input id="file" type="file" accept=".json" hidden></label>
+  <span id="stats">loading…</span>
+</header>
+<main>
+  <div id="network"></div>
+  <aside>
+    <h2>Node types</h2>
+    <div id="legend"></div>
+    <div id="detail"><h2>Details</h2><p id="hint">Click a node. Tip: search <b>P-101</b> and press the Golden Thread button — the failure chain nobody connected, connected.</p></div>
+  </aside>
+</main>
+<script>
+const COLORS = {
+  Equipment: "#4da3ff", Document: "#5f6f91", WorkOrder: "#57c785", Failure: "#ff5d5d",
+  Inspection: "#ffd479", Calibration: "#c9b4ff", NCR: "#ff9950", CAPA: "#67e0d2",
+  Audit: "#e08ee0", Incident: "#ff7597", NearMiss: "#ffb3c1", Regulation: "#b0d94e",
+  Person: "#9aa7ba", SparePart: "#6fd3ff", Permit: "#d4c26a", Procedure: "#8de08e",
+  LessonLearned: "#f2a1ff",
+};
+const SIZE = { Equipment: 26, Regulation: 20, Failure: 20, Incident: 20 };
+let GRAPH = null, network = null, allNodes = [], allEdges = [];
+let hiddenTypes = new Set(["Document", "Person"]);   // start focused on the asset story
+let goldenMode = false;
+
+async function boot() {
+  for (const url of ["http://localhost:8000/api/graph", "../../SharedCorpus/shared/graph.json"]) {
+    try { const r = await fetch(url); if (r.ok) { load(await r.json()); return; } } catch (e) {}
+  }
+  document.getElementById("stats").textContent = "auto-load failed — use “Load graph.json”";
+}
+document.getElementById("file").addEventListener("change", ev => {
+  const f = ev.target.files[0]; if (!f) return;
+  f.text().then(t => load(JSON.parse(t)));
+});
+
+function load(g) {
+  GRAPH = g;
+  allNodes = g.nodes.map(n => ({
+    id: n.id, ntype: n.type, key: n.key, props: n.props || {},
+    label: shortLabel(n), title: n.id,
+    color: { background: COLORS[n.type] || "#888", border: "#0f1420" },
+    size: SIZE[n.type] || 14, shape: n.type === "Document" ? "box" : "dot",
+    font: { color: "#dfe7f5", size: 11 },
+  }));
+  allEdges = g.edges.map((e, i) => ({
+    id: "e" + i, from: e.source, to: e.target, rel: e.rel, props: e.props || {},
+    label: "", title: e.rel, arrows: "to",
+    color: { color: "#3b4a6e", highlight: "#4da3ff" },
+    width: e.rel === "SAME_CLASS_AS" ? 2.5 : 1,
+    dashes: e.rel === "CO_OCCURS_WITH",
+  }));
+  buildLegend();
+  render();
+}
+
+function shortLabel(n) {
+  if (n.type === "Document") { const p = n.key.split("/").pop(); return p.length > 26 ? p.slice(0, 24) + "…" : p; }
+  return n.key.length > 24 ? n.key.slice(0, 22) + "…" : n.key;
+}
+
+function visibleSets() {
+  let nodes = allNodes.filter(n => !hiddenTypes.has(n.ntype));
+  if (goldenMode) {
+    const keep = twoHop("Equipment:P-101");
+    nodes = allNodes.filter(n => keep.has(n.id));   // golden view overrides type filters
+  }
+  const ids = new Set(nodes.map(n => n.id));
+  const edges = allEdges.filter(e => ids.has(e.from) && ids.has(e.to));
+  return { nodes, edges };
+}
+
+function twoHop(start) {
+  const adj = new Map();
+  for (const e of allEdges) {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    if (!adj.has(e.to)) adj.set(e.to, []);
+    adj.get(e.from).push(e.to); adj.get(e.to).push(e.from);
+  }
+  const seen = new Set([start]); let frontier = [start];
+  for (let h = 0; h < 2; h++) {
+    const next = [];
+    for (const f of frontier) for (const n of (adj.get(f) || [])) if (!seen.has(n)) { seen.add(n); next.push(n); }
+    frontier = next;
+  }
+  return seen;
+}
+
+function render() {
+  const { nodes, edges } = visibleSets();
+  const styled = nodes.map(n => {
+    if (goldenMode && n.props.result === "OVERDUE") {
+      return { ...n, color: { background: "#ff3b3b", border: "#ffffff" }, size: 24,
+               font: { color: "#ffb3b3", size: 12 } };
+    }
+    if (goldenMode && n.id === "Equipment:P-101") {
+      return { ...n, size: 34, color: { background: "#ffd21f", border: "#fff" }, font: { color: "#ffe58a", size: 13 } };
+    }
+    return n;
+  });
+  const data = { nodes: new vis.DataSet(styled), edges: new vis.DataSet(edges.map(e => ({ ...e, label: goldenMode ? e.rel : "" , font: { color: "#7d8db3", size: 9, strokeWidth: 0 }}))) };
+  if (!network) {
+    network = new vis.Network(document.getElementById("network"), data, {
+      physics: { barnesHut: { gravitationalConstant: -6000, springLength: 130 }, stabilization: { iterations: 150 } },
+      interaction: { hover: true },
+    });
+    network.on("click", p => { if (p.nodes.length) showDetail(p.nodes[0]); });
+  } else network.setData(data);
+  document.getElementById("stats").textContent =
+    `${nodes.length}/${allNodes.length} nodes · ${edges.length}/${allEdges.length} edges` + (goldenMode ? " · GOLDEN THREAD" : "");
+}
+
+function buildLegend() {
+  const counts = {};
+  for (const n of allNodes) counts[n.ntype] = (counts[n.ntype] || 0) + 1;
+  const el = document.getElementById("legend"); el.innerHTML = "";
+  Object.keys(counts).sort().forEach(t => {
+    const div = document.createElement("div");
+    div.className = "legend-item" + (hiddenTypes.has(t) ? " off" : "");
+    div.innerHTML = `<span class="dot" style="background:${COLORS[t] || '#888'}"></span>${t}<span class="count">${counts[t]}</span>`;
+    div.onclick = () => { hiddenTypes.has(t) ? hiddenTypes.delete(t) : hiddenTypes.add(t); div.classList.toggle("off"); render(); };
+    el.appendChild(div);
+  });
+}
+
+function showDetail(id) {
+  const n = allNodes.find(x => x.id === id); if (!n) return;
+  const rows = Object.entries(n.props).filter(([, v]) => v !== "" && v != null)
+    .map(([k, v]) => `<tr><td>${k}</td><td>${Array.isArray(v) ? v.join(", ") : v}</td></tr>`).join("");
+  const rels = allEdges.filter(e => e.from === id || e.to === id).slice(0, 60)
+    .map(e => {
+      const other = e.from === id ? e.to : e.from;
+      const dir = e.from === id ? "→" : "←";
+      return `<div class="rel"><b>${e.rel}</b> ${dir} <a onclick="focusNode('${other.replace(/'/g, "\\'")}')">${other}</a></div>`;
+    }).join("");
+  document.getElementById("detail").innerHTML =
+    `<h2>Details</h2><div class="nid">${id}</div><table>${rows}</table>
+     <h2>Relationships (${allEdges.filter(e => e.from === id || e.to === id).length})</h2>${rels}`;
+}
+
+function focusNode(id) {
+  const n = allNodes.find(x => x.id === id); if (!n) return;
+  if (hiddenTypes.has(n.ntype) && !goldenMode) { hiddenTypes.delete(n.ntype); buildLegend(); render(); }
+  try { network.selectNodes([id]); network.focus(id, { scale: 1.1, animation: true }); showDetail(id); } catch (e) {}
+}
+
+document.getElementById("search").addEventListener("keydown", ev => {
+  if (ev.key !== "Enter") return;
+  const q = ev.target.value.trim().toLowerCase(); if (!q) return;
+  const hit = allNodes.find(n => n.id.toLowerCase() === q) ||
+              allNodes.find(n => n.key.toLowerCase() === q) ||
+              allNodes.find(n => n.id.toLowerCase().includes(q) || (n.props.title || "").toLowerCase().includes(q));
+  if (hit) focusNode(hit.id);
+});
+document.getElementById("goldenBtn").onclick = function () {
+  goldenMode = !goldenMode; this.classList.toggle("active", goldenMode); render();
+  if (goldenMode) setTimeout(() => focusNode("Equipment:P-101"), 600);
+};
+document.getElementById("docsBtn").onclick = function () {
+  if (hiddenTypes.has("Document")) { hiddenTypes.delete("Document"); this.textContent = "Hide documents"; }
+  else { hiddenTypes.add("Document"); this.textContent = "Show documents"; }
+  buildLegend(); render();
+};
+document.getElementById("fitBtn").onclick = () => network && network.fit({ animation: true });
+boot();
+</script>
+</body>
+</html>
