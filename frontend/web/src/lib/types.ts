@@ -59,3 +59,45 @@ export interface IngestStatus {
   node_types?: Record<string, number>;
   edge_types?: Record<string, number>;
 }
+
+/* ------------------------------------------------------------------ */
+/* F2 Copilot types                                                    */
+/* ------------------------------------------------------------------ */
+
+export interface Citation {
+  doc_id: string;
+  chunk_id: string;
+  doc_type: string;
+  page: number | null;
+  snippet: string;
+  score: number;
+}
+
+export interface CopilotResponse {
+  answer: string;
+  citations: Citation[];
+  confidence: number;
+  sources_used: number;
+  latency_ms: number;
+}
+
+export interface CopilotStatus {
+  built: boolean;
+  chunk_count: number;
+  embed_model: string;
+  llm_provider: string | null;
+  llm_model: string | null;
+  llm_configured: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  citations?: Citation[];
+  confidence?: number;
+  sources_used?: number;
+  latency_ms?: number;
+  timestamp: number;
+}
+
