@@ -1,5 +1,5 @@
 /* API client — talks to the FastAPI backend */
-import type { GraphData, IngestStatus } from "./types";
+import type { GraphData, IngestStatus, CopilotResponse, CopilotStatus } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -24,3 +24,37 @@ export async function fetchIngestStatus(): Promise<IngestStatus> {
   if (!res.ok) throw new Error(`Failed to fetch ingest status: ${res.status}`);
   return res.json();
 }
+
+/* ------------------------------------------------------------------ */
+/* F2 Copilot                                                          */
+/* ------------------------------------------------------------------ */
+
+export async function askCopilot(
+  query: string,
+  topK: number = 8
+): Promise<CopilotResponse> {
+  const res = await fetch(`${API_BASE}/api/copilot/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, top_k: topK }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => res.statusText);
+    throw new Error(`Copilot error (${res.status}): ${detail}`);
+  }
+  return res.json();
+}
+
+export async function fetchCopilotStatus(): Promise<CopilotStatus> {
+  const res = await fetch(`${API_BASE}/api/copilot/status`);
+  if (!res.ok) throw new Error(`Failed to fetch copilot status: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchCopilotSuggestions(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/api/copilot/suggest`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.suggestions || [];
+}
+

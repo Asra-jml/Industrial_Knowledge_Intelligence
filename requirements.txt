@@ -23,5 +23,10 @@ ultralytics>=8.3
 fastapi>=0.115
 uvicorn[standard]>=0.35
 
+# F2 RAG Copilot
+sentence-transformers>=3.0
+faiss-cpu>=1.9
+openai>=1.40
+
 # Tests
 pytest>=8.3
