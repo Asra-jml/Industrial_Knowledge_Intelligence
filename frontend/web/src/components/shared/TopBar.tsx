@@ -58,7 +58,12 @@ export default function TopBar() {
         <div className="flex-1" />
 
         {/* search (visual affordance) */}
-        <button className="hidden h-8 w-64 items-center gap-2 rounded-lg border border-edge bg-bg px-3 text-[13px] text-dim transition-colors hover:border-edge-strong md:flex">
+        <button
+          type="button"
+          disabled
+          aria-label="Search (coming soon)"
+          className="hidden h-8 w-64 items-center gap-2 rounded-lg border border-edge bg-bg px-3 text-[13px] text-dim transition-colors hover:border-edge-strong disabled:cursor-not-allowed disabled:opacity-60 md:flex"
+        >
           <Search className="h-3.5 w-3.5" />
           <span className="flex-1 text-left">Search assets, records…</span>
           <Kbd>⌘K</Kbd>
