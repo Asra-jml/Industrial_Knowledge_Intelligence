@@ -7,6 +7,7 @@ F5 routers/lessons.py — mount them here.
 from __future__ import annotations
 
 from fastapi import FastAPI
+from backend.api.routers import rca
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routers import graph, copilot
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(graph.router)
 app.include_router(copilot.router)
+app.include_router(rca.router)
 
 
 @app.get("/health")
