@@ -58,3 +58,35 @@ export async function fetchCopilotSuggestions(): Promise<string[]> {
   return data.suggestions || [];
 }
 
+export interface LessonsResponse {
+  risk: string;
+  message: string;
+  matched_cases: number;
+  analysis: {
+    pattern_found: string;
+    root_causes: string[];
+    repeated_risks: string[];
+    lessons_learned: string[];
+    preventive_actions: string[];
+  };
+}
+
+export async function analyzeLessons(
+  query: string
+): Promise<LessonsResponse> {
+  const res = await fetch(`${API_BASE}/api/lessons/analyze`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => res.statusText);
+    throw new Error(`Lessons API Error (${res.status}): ${detail}`);
+  }
+
+  return res.json();
+}
+
