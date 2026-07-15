@@ -1,39 +1,28 @@
-import ModulePlaceholder from "@/components/shared/ModulePlaceholder";
+import LessonDashboard from "@/components/lessons/LessonDashboard";
 
 export default function LessonsPage() {
   return (
-    <ModulePlaceholder
-      module="F5"
-      title="Lessons Learned & Failure Intelligence"
-      tagline="The pattern nobody sees across three pumps and two years."
-      description="Clusters internal incidents and near-misses with external databases — CSB investigations, OISD case studies — to surface systemic failure patterns and push proactive warnings before they repeat."
-      icon="Lightbulb"
-      features={[
-        {
-          icon: "Repeat2",
-          title: "Pattern clustering",
-          description:
-            "Groups incidents by failure mode across internal records and industry precedents.",
-        },
-        {
-          icon: "Radar",
-          title: "Sibling-asset watch",
-          description:
-            "SAME_CLASS_AS edges connect P-102's near-miss and P-101's failure to P-205 — whose vibration is rising now.",
-        },
-        {
-          icon: "BellRing",
-          title: "Proactive alerts",
-          description:
-            "Warnings pushed with the external case studies that prove the failure mode is real.",
-        },
-      ]}
-      reads={[
-        "shared/corpus_index.jsonl (incident chunks)",
-        "shared/graph.json (SAME_CLASS_AS)",
-        "CSB · OISD · IHM databases",
-      ]}
-      acceptance="Connects P-102 near-miss + P-101 failure → warns P-205 before recurrence, citing external precedents."
-    />
+    <main className="space-y-8">
+
+      <div className="space-y-3">
+
+        <h1 className="text-4xl font-bold tracking-tight text-white">
+          Lessons Learned & Failure Intelligence Engine
+        </h1>
+
+        <p className="max-w-4xl text-zinc-400 leading-7">
+          Analyze incident reports, near-miss records, audit findings,
+          quality non-conformances, and historical operational data to
+          identify recurring failure patterns. The AI engine detects
+          systemic risks across organizational knowledge, generates
+          lessons learned, and proactively recommends preventive actions
+          before similar conditions recur.
+        </p>
+
+      </div>
+
+      <LessonDashboard />
+
+    </main>
   );
 }
