@@ -1,5 +1,5 @@
 /* API client — talks to the FastAPI backend */
-import type { GraphData, IngestStatus, CopilotResponse, CopilotStatus } from "./types";
+import type { GraphData, IngestStatus, CopilotResponse, CopilotStatus, ComplianceDashboardData, ComplianceEntry, EvidencePack, NCRRecord, CAPARecord } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -56,5 +56,45 @@ export async function fetchCopilotSuggestions(): Promise<string[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return data.suggestions || [];
+}
+
+/* ------------------------------------------------------------------ */
+/* F4 Compliance                                                       */
+/* ------------------------------------------------------------------ */
+
+export async function fetchComplianceDashboard(): Promise<ComplianceDashboardData> {
+  const res = await fetch(`${API_BASE}/api/compliance/dashboard`);
+  if (!res.ok) throw new Error(`Failed to fetch compliance dashboard: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchComplianceGaps(): Promise<{ gaps: ComplianceEntry[]; count: number }> {
+  const res = await fetch(`${API_BASE}/api/compliance/gaps`);
+  if (!res.ok) throw new Error(`Failed to fetch compliance gaps: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchComplianceRegister(): Promise<{ register: ComplianceEntry[]; count: number }> {
+  const res = await fetch(`${API_BASE}/api/compliance/register`);
+  if (!res.ok) throw new Error(`Failed to fetch compliance register: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchEvidencePack(equipmentTag: string): Promise<EvidencePack> {
+  const res = await fetch(`${API_BASE}/api/compliance/evidence/${encodeURIComponent(equipmentTag)}`);
+  if (!res.ok) throw new Error(`Failed to fetch evidence pack: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchNCRs(): Promise<{ ncrs: NCRRecord[]; count: number }> {
+  const res = await fetch(`${API_BASE}/api/compliance/ncr`);
+  if (!res.ok) throw new Error(`Failed to fetch NCRs: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchCAPAs(): Promise<{ capas: CAPARecord[]; count: number }> {
+  const res = await fetch(`${API_BASE}/api/compliance/capa`);
+  if (!res.ok) throw new Error(`Failed to fetch CAPAs: ${res.status}`);
+  return res.json();
 }
 

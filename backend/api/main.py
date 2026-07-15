@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routers import graph, copilot
+from backend.api.routers import graph, copilot, compliance
 
 app = FastAPI(
     title="Industrial Knowledge Intelligence (IKI)",
@@ -27,6 +27,7 @@ app.add_middleware(
 
 app.include_router(graph.router)
 app.include_router(copilot.router)
+app.include_router(compliance.router)
 
 
 @app.get("/health")
