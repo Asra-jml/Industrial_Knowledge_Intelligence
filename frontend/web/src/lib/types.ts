@@ -101,3 +101,72 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+/* ------------------------------------------------------------------ */
+/* F4 Compliance types                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface ComplianceEntry {
+  req_id: string;
+  regulation: string;
+  clause: string;
+  requirement: string;
+  applies_to: string;
+  linked_procedure: string;
+  evidence: string;
+  status: "GAP" | "COMPLIANT" | "OPEN";
+  gap_note: string;
+  graph_edge?: Record<string, unknown>;
+}
+
+export interface NCRRecord {
+  ncr_id: string;
+  date_raised: string;
+  raised_by: string;
+  severity: string;
+  tag: string;
+  description: string;
+  procedure_breached: string;
+  regulation_breached: string;
+  status: string;
+  linked_capa: string;
+  capa?: CAPARecord | null;
+}
+
+export interface CAPARecord {
+  capa_id: string;
+  linked_ncr: string;
+  date_opened: string;
+  capa_type: string;
+  root_cause: string;
+  corrective_action: string;
+  preventive_action: string;
+  owner: string;
+  target_date: string;
+  status: string;
+  ncr?: NCRRecord | null;
+}
+
+export interface ComplianceDashboardData {
+  total_requirements: number;
+  gaps: number;
+  compliant: number;
+  open: number;
+  ncr_open: number;
+  capa_open: number;
+  ncr_total: number;
+  capa_total: number;
+  regulation_breakdown: Record<string, { total: number; gap: number; compliant: number; open: number }>;
+  asset_status: Array<{ tag: string; total: number; gap: number; compliant: number; open: number }>;
+}
+
+export interface EvidencePack {
+  equipment_tag: string;
+  compliance_entries: ComplianceEntry[];
+  ncrs: NCRRecord[];
+  capas: CAPARecord[];
+  graph_edges: GraphEdge[];
+  linked_documents: Array<{ doc_id: string; doc_type: string; title: string }>;
+  inspections: GraphNode[];
+  narrative: string;
+}
+
