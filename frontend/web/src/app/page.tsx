@@ -48,7 +48,7 @@ const MODULES: Module[] = [
     icon: MessagesSquare,
     description:
       "Conversational answers across the full corpus, with citations to source documents and confidence scores.",
-    status: "soon",
+    status: "live",
   },
   {
     code: "F3",
@@ -57,7 +57,7 @@ const MODULES: Module[] = [
     icon: Wrench,
     description:
       "Predictive alerts from vibration trends, plus root-cause analysis walked directly out of the graph.",
-    status: "soon",
+    status: "live",
   },
   {
     code: "F4",
@@ -66,7 +66,7 @@ const MODULES: Module[] = [
     icon: ShieldCheck,
     description:
       "Regulations mapped to assets and procedures. Gaps flagged automatically, evidence packs on demand.",
-    status: "soon",
+    status: "live",
   },
   {
     code: "F5",
@@ -75,7 +75,7 @@ const MODULES: Module[] = [
     icon: Lightbulb,
     description:
       "Systemic failure patterns clustered from internal incidents and external industry databases.",
-    status: "soon",
+    status: "live",
   },
 ];
 

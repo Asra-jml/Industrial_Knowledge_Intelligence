@@ -1,15 +1,14 @@
 """IKI FastAPI app — the single integration surface for all features.
 
 Run:  uvicorn backend.api.main:app --reload
-F2 adds routers/copilot.py, F3 routers/rca.py, F4 routers/compliance.py,
-F5 routers/lessons.py — mount them here.
+F1 graph · F2 copilot · F3 rca · F4 compliance · F5 lessons
 """
 from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routers import graph
+from backend.api.routers import compliance, copilot, graph, lessons, rca
 
 app = FastAPI(
     title="Industrial Knowledge Intelligence (IKI)",
@@ -26,6 +25,10 @@ app.add_middleware(
 )
 
 app.include_router(graph.router)
+app.include_router(copilot.router)
+app.include_router(rca.router)
+app.include_router(compliance.router)
+app.include_router(lessons.router)
 
 
 @app.get("/health")

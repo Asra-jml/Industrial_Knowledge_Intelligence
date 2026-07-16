@@ -197,12 +197,34 @@ RESULT: 11/11 checks passed
    from an overnight GPU/CPU run, and the ground-truth path is the PRD's own
    documented degradation.
 
+## 7.5 Features F2–F5 (built 2026-07-16)
+
+All four modules are live end-to-end (backend + UI), strictly additive on the F1
+shared layer — F1's pipeline, tests and acceptance scorecard are untouched
+(re-verified 8/8 after the build). Each degrades gracefully: no LLM key →
+extractive/rule-based mode; backend down → clear error states in the UI.
+
+| Module | Backend | API | Frontend |
+| --- | --- | --- | --- |
+| **F2 Copilot** | `backend/rag/` — pure-Python BM25 over the 8,062-chunk index with exact equipment-tag/record-ID boosting (an exact "P-101" hit outranks any fuzzy match) + Groq answer synthesis constrained to retrieved passages | `POST /api/copilot/ask` → `{answer, citations[], confidence, mode}` · `GET /api/copilot/suggestions` | Chat UI: inline [n] citation superscripts, per-source cards with snippets + tags, confidence & mode badges, suggested questions |
+| **F3 Maintenance & RCA** | `backend/rca/` — linear trend fit per degradation episode with alarm/trip crossing forecast; **backtest on P-101: alarm crossed 7 days before the trip** (PRD acceptance); forecast on P-205: alarm ~2026-07-09. RCA = 2-hop graph walk (record nodes only, so shared inspectors don't leak other assets' history) → dated causal chain + rule-based root cause + LLM narrative | `GET /api/rca/equipment` · `/api/rca/trend/{tag}` · `/api/rca/analyze/{tag}` | Recharts vibration chart with alarm/trip reference lines + dashed projection, prediction banner with lead-time, causal-chain timeline with OVERDUE pulse, root cause + breached regulations + CAPAs |
+| **F4 Compliance** | `backend/compliance/` — register CSV × graph join; evidence pack per requirement (cited inspections, NCR→CAPA chain, SOP, the regulation's own PDF) | `GET /api/compliance/register` · `/api/compliance/narrative` | Summary tiles (9 tracked / 4 GAP), register table with status badges, per-requirement evidence-pack panel |
+| **F5 Lessons Learned** | `backend/lessons/` — failure-mode keyword clustering over Failure/NearMiss/Incident nodes + SAME_CLASS_AS risk propagation + live trend check → **proactive P-205 alert citing P-101 + P-102 history and CSB precedents** (PRD acceptance); recommended action lifted from the plant's own CAPA | `GET /api/lessons/patterns` · `/api/lessons/alerts` | Alert cards (rationale, internal evidence, industry precedents, AI recommendation), recurring-pattern cards with at-risk sibling chips |
+
+Design decisions: BM25 instead of a vector store (zero new deps, deterministic,
+milliseconds on 8k chunks — and exact tag matches dominate anyway in an
+industrial corpus); one shared `backend/core/llm.py` so every module's LLM use
+is optional by construction; `neo4j_loader` now degrades gracefully when the
+Aura instance is paused (resume at console.neo4j.io before the demo).
+
 ## 8. Known limitations
 
-- **LLM enrichment currently inactive:** the configured xAI Grok key has no team credits
-  (API returns 403). The stage degrades gracefully (skipped, everything else works).
-  Fix: add credits at console.x.ai, **or** create a free Groq key at console.groq.com and
-  set `GROQ_API_KEY` in `.env` — the config auto-detects and prefers it.
+- ~~LLM enrichment inactive~~ **Resolved 2026-07-16:** a Groq key was added; the 13
+  CSB/OISD incident PDFs are enriched (12 summary chunks in the index) and all F2–F5
+  LLM features run on `llama-3.3-70b-versatile`.
+- **Neo4j Aura pauses when idle** — the loader now skips gracefully, but resume the
+  instance at console.neo4j.io (and run `python -m backend.ingestion.run_ingest`)
+  before a judged demo so the Cypher view is live.
 
 - The 400 P&ID drawings are generic public images (Digitize-PID dataset) — plant tags like
   P-101 come from the asset register (`pid_ref`), not from CV; the YOLO piece demonstrates
