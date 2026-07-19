@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { askCopilot, fetchSuggestions } from "@/lib/api";
+import { focusNodeIdFor } from "@/lib/graph-utils";
 import type { Citation, CopilotResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ function AnswerText({ text }: { text: string }) {
 }
 
 function CitationCard({ citation }: { citation: Citation }) {
+  const focusId = focusNodeIdFor(citation);
   return (
     <div className="rounded-lg border border-edge bg-bg p-3">
       <div className="flex items-center gap-2">
@@ -69,7 +71,11 @@ function CitationCard({ citation }: { citation: Citation }) {
           {citation.page ? ` · p.${citation.page}` : ""}
         </span>
         <Link
-          href="/knowledge-graph"
+          href={
+            focusId
+              ? `/knowledge-graph?focus=${encodeURIComponent(focusId)}`
+              : "/knowledge-graph"
+          }
           className="ml-auto shrink-0 text-[11px] font-medium text-accent hover:text-accent-hover"
         >
           graph →
@@ -114,7 +120,10 @@ export default function CopilotPage() {
       setBusy(true);
       setTurns((prev) => [...prev, { question: q }]);
       try {
-        const response = await askCopilot(q);
+        const history = turns
+          .filter((t) => t.response)
+          .map((t) => ({ question: t.question, answer: t.response!.answer }));
+        const response = await askCopilot(q, history);
         setTurns((prev) =>
           prev.map((t, i) => (i === prev.length - 1 ? { ...t, response } : t))
         );
@@ -130,7 +139,7 @@ export default function CopilotPage() {
         setBusy(false);
       }
     },
-    [busy]
+    [busy, turns]
   );
 
   return (

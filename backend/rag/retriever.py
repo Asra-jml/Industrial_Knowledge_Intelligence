@@ -28,7 +28,15 @@ B = 0.75
 
 
 def _tokenize(text: str) -> list[str]:
-    return _TOKEN_RE.findall(text.lower())
+    """Lowercase tokens; hyphenated tokens also emit their parts so
+    'rotating-equipment' matches 'rotating equipment' and 'OISD-STD-128'
+    matches a bare 'OISD'."""
+    tokens: list[str] = []
+    for token in _TOKEN_RE.findall(text.lower()):
+        tokens.append(token)
+        if "-" in token:
+            tokens.extend(part for part in token.split("-") if len(part) > 1)
+    return tokens
 
 
 @dataclass
@@ -95,6 +103,13 @@ def retrieve(
     per-document cap so one long manual can't monopolize the results."""
     index = get_index()
     query_tokens = _tokenize(query)
+    # naive number-stemming on the query side: 'regulations' must match
+    # 'regulation', 'permits' must match 'permit' (and vice versa)
+    for token in list(query_tokens):
+        if token.endswith("s") and len(token) > 3:
+            query_tokens.append(token[:-1])
+        elif token.isalpha() and len(token) > 2:
+            query_tokens.append(token + "s")
     ids_in_query = set(_ID_RE.findall(query)) | {
         t.upper() for t in query_tokens if re.fullmatch(r"[a-z]{1,4}-\d{2,4}", t)
     }

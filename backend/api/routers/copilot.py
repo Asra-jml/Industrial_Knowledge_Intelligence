@@ -18,8 +18,14 @@ SUGGESTIONS = [
 ]
 
 
+class HistoryTurn(BaseModel):
+    question: str = Field(max_length=500)
+    answer: str = Field(max_length=4000)
+
+
 class AskRequest(BaseModel):
     question: str = Field(min_length=2, max_length=500)
+    history: list[HistoryTurn] = Field(default_factory=list, max_length=6)
 
 
 @router.post("/ask")
@@ -27,7 +33,8 @@ def copilot_ask(body: AskRequest) -> dict:
     question = body.question.strip()
     if not question:
         raise HTTPException(422, "question is empty")
-    return ask(question)
+    history = [t.model_dump() for t in body.history]
+    return ask(question, history=history)
 
 
 @router.get("/suggestions")

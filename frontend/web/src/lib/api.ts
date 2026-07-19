@@ -42,11 +42,14 @@ export async function fetchIngestStatus(): Promise<IngestStatus> {
 }
 
 /* ---- F2 Copilot ---- */
-export async function askCopilot(question: string): Promise<CopilotResponse> {
+export async function askCopilot(
+  question: string,
+  history: { question: string; answer: string }[] = []
+): Promise<CopilotResponse> {
   const res = await fetch(`${API_BASE}/api/copilot/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, history: history.slice(-3) }),
   });
   if (!res.ok) throw new Error(`Copilot request failed: ${res.status}`);
   return res.json();
@@ -74,6 +77,11 @@ export function fetchRcaAnalysis(tag: string): Promise<RcaResponse> {
 /* ---- F4 Compliance ---- */
 export function fetchComplianceRegister(): Promise<ComplianceRegister> {
   return getJson("/api/compliance/register");
+}
+
+export async function fetchComplianceNarrative(): Promise<string | null> {
+  const data = await getJson<{ narrative: string | null }>("/api/compliance/narrative");
+  return data.narrative;
 }
 
 /* ---- F5 Lessons ---- */

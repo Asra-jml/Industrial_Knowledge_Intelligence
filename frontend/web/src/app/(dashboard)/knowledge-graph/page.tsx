@@ -27,7 +27,7 @@ export default function KnowledgeGraphPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
-  // Load graph data
+  // Load graph data (+ honor ?focus=Node:id deep links from other modules)
   useEffect(() => {
     Promise.all([
       fetchGraph().catch(() => null),
@@ -37,6 +37,17 @@ export default function KnowledgeGraphPage() {
         setGraph(g);
         setStatus(s);
         setLoading(false);
+        const focus = new URLSearchParams(window.location.search).get("focus");
+        const hit = focus ? g.nodes.find((n) => n.id === focus) : null;
+        if (hit) {
+          setHiddenTypes((prev) => {
+            const next = new Set(prev);
+            next.delete(hit.type);
+            return next;
+          });
+          setSelectedNodeId(hit.id);
+          setFocusNodeId(hit.id);
+        }
       } else {
         setError(
           "Could not load graph. Make sure the FastAPI backend is running: uvicorn backend.api.main:app --reload"

@@ -217,6 +217,31 @@ industrial corpus); one shared `backend/core/llm.py` so every module's LLM use
 is optional by construction; `neo4j_loader` now degrades gracefully when the
 Aura instance is paused (resume at console.neo4j.io before the demo).
 
+### F2 benchmark (PRD §2: "≥ 12/15 correct + cited")
+
+The PRD-referenced benchmark now exists: `SharedCorpus/eval/benchmark_questions.md`
+(15 domain-expert questions with expected sources + expected facts), scored
+automatically by `scripts/eval_f2.py` against the live copilot.
+
+**Result (2026-07-16): 13/15 correct + cited — target met.** A question passes
+only if BOTH the expected source document is cited AND the majority of expected
+facts appear in the answer. The two misses are LLM citation-choice variance
+(the right passages are retrieved but the model cites a sibling source) — we
+deliberately did not over-fit the benchmark. Retrieval hardening that came out
+of the eval: hyphen sub-tokenization ("rotating-equipment" matches "rotating
+equipment"), query-side plural stemming ("regulations"→"regulation"), 429
+retry with Retry-After in the LLM client, and leaner prompts for free-tier
+token budgets.
+
+### Cross-module polish (2026-07-16)
+
+- **Multi-turn copilot**: follow-ups like "what about P-102?" inherit record IDs
+  and context from the last turns (history is passed to retrieval + prompt).
+- **Deep links**: copilot citations and compliance evidence items link to
+  `/knowledge-graph?focus=<node>` — the graph opens with that node selected,
+  its type unhidden, camera centered. Every module lands back on the graph.
+- **AI leadership summary** on the compliance page (`/api/compliance/narrative`).
+
 ## 8. Known limitations
 
 - ~~LLM enrichment inactive~~ **Resolved 2026-07-16:** a Groq key was added; the 13

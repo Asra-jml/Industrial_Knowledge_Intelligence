@@ -9,8 +9,9 @@ import {
   FileWarning,
   ScrollText,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
-import { fetchComplianceRegister } from "@/lib/api";
+import { fetchComplianceNarrative, fetchComplianceRegister } from "@/lib/api";
 import type { ComplianceRegister, ComplianceRequirement } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ function SummaryTile({
 
 export default function CompliancePage() {
   const [data, setData] = useState<ComplianceRegister | null>(null);
+  const [narrative, setNarrative] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ComplianceRequirement | null>(null);
 
@@ -69,6 +71,7 @@ export default function CompliancePage() {
       .catch(() =>
         setError("Backend unreachable — start it with: uvicorn backend.api.main:app --reload")
       );
+    fetchComplianceNarrative().then(setNarrative).catch(() => undefined);
   }, []);
 
   if (error) {
@@ -97,6 +100,23 @@ export default function CompliancePage() {
             [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[76px]" />)
           )}
         </div>
+
+        {/* AI gap narrative */}
+        {narrative && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 flex items-start gap-2.5 rounded-xl border border-accent/20 bg-accent/[0.05] p-4"
+          >
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+            <div>
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-dim">
+                AI summary for leadership
+              </div>
+              <p className="text-[13px] leading-relaxed text-fg">{narrative}</p>
+            </div>
+          </motion.div>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[3fr_2fr]">
           {/* register table */}
@@ -203,9 +223,18 @@ export default function CompliancePage() {
                       className="rounded-lg border border-edge bg-bg px-3 py-2"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[12px] font-medium text-accent">
-                          {item.key.length > 34 ? `…${item.key.slice(-30)}` : item.key}
-                        </span>
+                        {item.in_graph ? (
+                          <Link
+                            href={`/knowledge-graph?focus=${encodeURIComponent(item.id)}`}
+                            className="font-mono text-[12px] font-medium text-accent hover:text-accent-hover hover:underline"
+                          >
+                            {item.key.length > 34 ? `…${item.key.slice(-30)}` : item.key}
+                          </Link>
+                        ) : (
+                          <span className="font-mono text-[12px] font-medium text-muted">
+                            {item.key.length > 34 ? `…${item.key.slice(-30)}` : item.key}
+                          </span>
+                        )}
                         {item.date && (
                           <span className="font-mono text-[10px] text-dim">{item.date}</span>
                         )}
@@ -221,10 +250,14 @@ export default function CompliancePage() {
                 </div>
 
                 <Link
-                  href="/knowledge-graph"
+                  href={
+                    /^[A-Z]{1,3}-\d{2,4}$/.test(selected.applies_to)
+                      ? `/knowledge-graph?focus=${encodeURIComponent(`Equipment:${selected.applies_to}`)}`
+                      : "/knowledge-graph"
+                  }
                   className="mt-4 inline-flex items-center gap-1 text-[12.5px] font-medium text-accent hover:text-accent-hover"
                 >
-                  Trace in the knowledge graph
+                  Trace {selected.applies_to} in the knowledge graph
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               </motion.div>
