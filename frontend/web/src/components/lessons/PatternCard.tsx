@@ -1,14 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { BrainCircuit, Sparkles } from "lucide-react";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface PatternCardProps {
   pattern: string;
@@ -18,46 +11,45 @@ export default function PatternCard({
   pattern,
 }: PatternCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-    >
-      <Card className="overflow-hidden transition-all duration-300 hover:border-edge-strong">
-        <CardHeader className="border-b border-edge bg-raised/40">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-accent/20 bg-accent/10">
-              <BrainCircuit className="h-5 w-5 text-accent" />
-            </span>
+    <Card className="border-white/10 bg-zinc-900 p-6">
 
-            <div>
-              <CardTitle className="font-display text-xl">
-                AI Detected Pattern
-              </CardTitle>
+      <div className="flex items-center gap-4">
 
-              <p className="mt-1 text-sm text-muted">
-                Historical operational intelligence identified the following recurring pattern.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
+        <div className="rounded-xl bg-cyan-500/10 p-3">
+          <BrainCircuit className="h-7 w-7 text-cyan-400" />
+        </div>
 
-        <CardContent className="p-6">
-          <div className="rounded-xl border border-accent/20 bg-accent/[0.05] p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-accent" />
+        <div>
+          <h2 className="text-xl font-semibold text-white">
+            AI Detected Pattern
+          </h2>
 
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
-                Failure Pattern
-              </span>
-            </div>
+          <p className="mt-1 text-sm text-zinc-400">
+            The AI engine identified a recurring systemic failure pattern
+            from historical operational records and incident history.
+          </p>
+        </div>
 
-            <p className="text-lg font-semibold leading-8 text-fg">
-              {pattern}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-6">
+
+        <div className="mb-2 flex items-center gap-2">
+
+          <Sparkles className="h-5 w-5 text-cyan-300" />
+
+          <span className="text-sm font-medium uppercase tracking-wide text-cyan-300">
+            Failure Pattern
+          </span>
+
+        </div>
+
+        <p className="text-2xl font-semibold leading-relaxed text-cyan-100">
+          {pattern}
+        </p>
+
+      </div>
+
+    </Card>
   );
 }

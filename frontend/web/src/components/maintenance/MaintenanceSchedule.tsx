@@ -1,3 +1,14 @@
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  CalendarClock,
+  Clock3,
+  ShieldCheck,
+  Wrench,
+  CheckCircle2,
+} from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -23,85 +34,123 @@ export default function MaintenanceSchedule({
   schedule,
   maintenance,
 }: Props) {
+  const scheduleItems = [
+    {
+      title: "Inspection",
+      value: schedule.inspection,
+    },
+    {
+      title: "Lubrication",
+      value: schedule.lubrication,
+    },
+    {
+      title: "Alignment",
+      value: schedule.alignment,
+    },
+    {
+      title: "Bearing Check",
+      value: schedule.bearing_check,
+    },
+  ];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Maintenance Schedule</CardTitle>
-      </CardHeader>
-
-      <CardContent className="grid gap-6 md:grid-cols-2">
-
-        <div className="rounded-lg border p-4">
-          <h3 className="mb-3 font-semibold">
-            Optimized Schedule
-          </h3>
-
-          <div className="space-y-3">
-
-            <div className="flex justify-between">
-              <span>Inspection</span>
-              <span className="font-semibold">
-                {schedule.inspection}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Lubrication</span>
-              <span className="font-semibold">
-                {schedule.lubrication}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Alignment</span>
-              <span className="font-semibold">
-                {schedule.alignment}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Bearing Check</span>
-              <span className="font-semibold">
-                {schedule.bearing_check}
-              </span>
-            </div>
-
-          </div>
-        </div>
-
-        <div className="rounded-lg border p-4">
-
-          <h3 className="mb-3 font-semibold">
-            Maintenance Recommendation
-          </h3>
-
-          <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+    >
+      <Card className="overflow-hidden transition-all duration-300 hover:border-edge-strong">
+        <CardHeader className="border-b border-edge bg-raised/40">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-success/20 bg-success/10">
+              <CalendarClock className="h-5 w-5 text-success" />
+            </span>
 
             <div>
-              <p className="text-xs text-dim">
-                Urgent Action
-              </p>
+              <CardTitle className="font-display text-xl">
+                Maintenance Schedule
+              </CardTitle>
 
-              <p className="font-semibold">
-                {maintenance.urgent}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-dim">
-                Preventive Plan
-              </p>
-
-              <p className="font-semibold">
-                {maintenance.preventive}
+              <p className="mt-1 text-sm text-muted">
+                AI optimized maintenance schedule and recommended actions.
               </p>
             </div>
+          </div>
+        </CardHeader>
 
+        <CardContent className="grid gap-6 p-6 lg:grid-cols-2">
+          {/* Optimized Schedule */}
+
+          <div className="rounded-xl border border-edge bg-raised p-5">
+            <div className="mb-5 flex items-center gap-2">
+              <Clock3 className="h-5 w-5 text-accent" />
+
+              <h3 className="font-semibold text-fg">
+                Optimized Schedule
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {scheduleItems.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center justify-between rounded-lg border border-edge px-4 py-3"
+                >
+                  <span className="text-sm text-muted">
+                    {item.title}
+                  </span>
+
+                  <span className="font-semibold text-fg">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
-        </div>
+          {/* AI Recommendation */}
 
-      </CardContent>
-    </Card>
+          <div className="rounded-xl border border-edge bg-raised p-5">
+            <div className="mb-5 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-success" />
+
+              <h3 className="font-semibold text-fg">
+                AI Recommendation
+              </h3>
+            </div>
+
+            <div className="space-y-5">
+              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-red-400" />
+
+                  <span className="text-sm font-semibold text-red-400">
+                    Urgent Action
+                  </span>
+                </div>
+
+                <p className="text-sm leading-6 text-muted">
+                  {maintenance.urgent}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+
+                  <span className="text-sm font-semibold text-green-400">
+                    Preventive Plan
+                  </span>
+                </div>
+
+                <p className="text-sm leading-6 text-muted">
+                  {maintenance.preventive}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
