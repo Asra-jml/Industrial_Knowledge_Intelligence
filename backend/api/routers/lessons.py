@@ -1,27 +1,18 @@
+"""F5 — Lessons Learned & Failure Intelligence endpoints."""
+from __future__ import annotations
+
 from fastapi import APIRouter
-from pydantic import BaseModel
 
-from backend.lessons.alerts import generate_alert
+from backend.lessons.patterns import alerts, patterns
 
-
-router = APIRouter(
-    prefix="/api/lessons",
-    tags=["Lessons Learned"]
-)
+router = APIRouter(prefix="/api/lessons", tags=["lessons"])
 
 
-class LessonRequest(BaseModel):
-    query: str
+@router.get("/patterns")
+def lessons_patterns() -> dict:
+    return patterns()
 
 
-
-@router.post("/analyze")
-def analyze_lesson(
-    request: LessonRequest
-):
-
-    result = generate_alert(
-        request.query
-    )
-
-    return result
+@router.get("/alerts")
+def lessons_alerts() -> dict:
+    return alerts()

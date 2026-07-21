@@ -1,7 +1,23 @@
 /* API client — talks to the FastAPI backend */
-import type { GraphData, IngestStatus, CopilotResponse, CopilotStatus, ComplianceDashboardData, ComplianceEntry, EvidencePack, NCRRecord, CAPARecord } from "./types";
+import type {
+  ComplianceRegister,
+  CopilotResponse,
+  EquipmentHealth,
+  FailurePattern,
+  GraphData,
+  IngestStatus,
+  LessonsAlert,
+  RcaResponse,
+  TrendResponse,
+} from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+async function getJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) throw new Error(`${path} failed: ${res.status}`);
+  return res.json();
+}
 
 export async function fetchGraph(): Promise<GraphData> {
   const res = await fetch(`${API_BASE}/api/graph`);
@@ -25,108 +41,56 @@ export async function fetchIngestStatus(): Promise<IngestStatus> {
   return res.json();
 }
 
-/* ------------------------------------------------------------------ */
-/* F2 Copilot                                                          */
-/* ------------------------------------------------------------------ */
-
+/* ---- F2 Copilot ---- */
 export async function askCopilot(
-  query: string,
-  topK: number = 8
+  question: string,
+  history: { question: string; answer: string }[] = []
 ): Promise<CopilotResponse> {
   const res = await fetch(`${API_BASE}/api/copilot/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, top_k: topK }),
+    body: JSON.stringify({ question, history: history.slice(-3) }),
   });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => res.statusText);
-    throw new Error(`Copilot error (${res.status}): ${detail}`);
-  }
+  if (!res.ok) throw new Error(`Copilot request failed: ${res.status}`);
   return res.json();
 }
 
-export async function fetchCopilotStatus(): Promise<CopilotStatus> {
-  const res = await fetch(`${API_BASE}/api/copilot/status`);
-  if (!res.ok) throw new Error(`Failed to fetch copilot status: ${res.status}`);
-  return res.json();
+export async function fetchSuggestions(): Promise<string[]> {
+  const data = await getJson<{ suggestions: string[] }>("/api/copilot/suggestions");
+  return data.suggestions;
 }
 
-export async function fetchCopilotSuggestions(): Promise<string[]> {
-  const res = await fetch(`${API_BASE}/api/copilot/suggest`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.suggestions || [];
+/* ---- F3 Maintenance & RCA ---- */
+export async function fetchRcaEquipment(): Promise<EquipmentHealth[]> {
+  const data = await getJson<{ equipment: EquipmentHealth[] }>("/api/rca/equipment");
+  return data.equipment;
 }
 
-/* ------------------------------------------------------------------ */
-/* F4 Compliance                                                       */
-/* ------------------------------------------------------------------ */
-
-export async function fetchComplianceDashboard(): Promise<ComplianceDashboardData> {
-  const res = await fetch(`${API_BASE}/api/compliance/dashboard`);
-  if (!res.ok) throw new Error(`Failed to fetch compliance dashboard: ${res.status}`);
-  return res.json();
+export function fetchRcaTrend(tag: string): Promise<TrendResponse> {
+  return getJson(`/api/rca/trend/${encodeURIComponent(tag)}`);
 }
 
-export async function fetchComplianceGaps(): Promise<{ gaps: ComplianceEntry[]; count: number }> {
-  const res = await fetch(`${API_BASE}/api/compliance/gaps`);
-  if (!res.ok) throw new Error(`Failed to fetch compliance gaps: ${res.status}`);
-  return res.json();
+export function fetchRcaAnalysis(tag: string): Promise<RcaResponse> {
+  return getJson(`/api/rca/analyze/${encodeURIComponent(tag)}`);
 }
 
-export async function fetchComplianceRegister(): Promise<{ register: ComplianceEntry[]; count: number }> {
-  const res = await fetch(`${API_BASE}/api/compliance/register`);
-  if (!res.ok) throw new Error(`Failed to fetch compliance register: ${res.status}`);
-  return res.json();
+/* ---- F4 Compliance ---- */
+export function fetchComplianceRegister(): Promise<ComplianceRegister> {
+  return getJson("/api/compliance/register");
 }
 
-export async function fetchEvidencePack(equipmentTag: string): Promise<EvidencePack> {
-  const res = await fetch(`${API_BASE}/api/compliance/evidence/${encodeURIComponent(equipmentTag)}`);
-  if (!res.ok) throw new Error(`Failed to fetch evidence pack: ${res.status}`);
-  return res.json();
+export async function fetchComplianceNarrative(): Promise<string | null> {
+  const data = await getJson<{ narrative: string | null }>("/api/compliance/narrative");
+  return data.narrative;
 }
 
-export async function fetchNCRs(): Promise<{ ncrs: NCRRecord[]; count: number }> {
-  const res = await fetch(`${API_BASE}/api/compliance/ncr`);
-  if (!res.ok) throw new Error(`Failed to fetch NCRs: ${res.status}`);
-  return res.json();
-  
+/* ---- F5 Lessons ---- */
+export async function fetchLessonsPatterns(): Promise<FailurePattern[]> {
+  const data = await getJson<{ patterns: FailurePattern[] }>("/api/lessons/patterns");
+  return data.patterns;
 }
 
-export async function fetchCAPAs(): Promise<{ capas: CAPARecord[]; count: number }> {
-  const res = await fetch(`${API_BASE}/api/compliance/capa`);
-  if (!res.ok) throw new Error(`Failed to fetch CAPAs: ${res.status}`);
-  return res.json();
+export async function fetchLessonsAlerts(): Promise<LessonsAlert[]> {
+  const data = await getJson<{ alerts: LessonsAlert[] }>("/api/lessons/alerts");
+  return data.alerts;
 }
-export interface LessonsResponse {
-  risk: string;
-  message: string;
-  matched_cases: number;
-  analysis: {
-    pattern_found: string;
-    root_causes: string[];
-    repeated_risks: string[];
-    lessons_learned: string[];
-    preventive_actions: string[];
-  };
-}
-
-export async function analyzeLessons(
-  query: string
-): Promise<LessonsResponse> {
-  const res = await fetch(`${API_BASE}/api/lessons/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => res.statusText);
-    throw new Error(`Lessons API Error (${res.status}): ${detail}`);
-  }
-
-  return res.json();
-}
-

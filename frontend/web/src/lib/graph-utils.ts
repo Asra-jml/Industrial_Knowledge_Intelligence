@@ -57,6 +57,29 @@ export function getNodeEdges(nodeId: string, edges: GraphEdge[]): GraphEdge[] {
   return edges.filter((e) => e.source === nodeId || e.target === nodeId);
 }
 
+/* Record-ID prefix -> graph node type (mirrors the backend ontology) */
+const PREFIX_TYPE: Record<string, string> = {
+  WO: "WorkOrder", FR: "Failure", NCR: "NCR", CAPA: "CAPA",
+  INSP: "Inspection", CAL: "Calibration", AUD: "Audit", INC: "Incident",
+  NM: "NearMiss", LL: "LessonLearned", PTW: "Permit", SOP: "Procedure",
+};
+
+/** Best graph node id to focus for a copilot citation / evidence item. */
+export function focusNodeIdFor(opts: {
+  record_ids?: string[];
+  equipment_tags?: string[];
+  doc_id?: string;
+}): string | null {
+  const record = opts.record_ids?.[0];
+  if (record) {
+    const type = PREFIX_TYPE[record.split("-", 1)[0]];
+    if (type) return `${type}:${record}`;
+  }
+  if (opts.equipment_tags?.[0]) return `Equipment:${opts.equipment_tags[0]}`;
+  if (opts.doc_id) return `Document:${opts.doc_id}`;
+  return null;
+}
+
 /** Count nodes by type */
 export function countByType(nodes: GraphNode[]): Record<string, number> {
   const counts: Record<string, number> = {};

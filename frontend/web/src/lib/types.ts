@@ -60,15 +60,15 @@ export interface IngestStatus {
   edge_types?: Record<string, number>;
 }
 
-/* ------------------------------------------------------------------ */
-/* F2 Copilot types                                                    */
-/* ------------------------------------------------------------------ */
-
+/* ---- F2 Copilot ---- */
 export interface Citation {
-  doc_id: string;
+  ref: number;
   chunk_id: string;
+  doc_id: string;
   doc_type: string;
   page: number | null;
+  equipment_tags: string[];
+  record_ids: string[];
   snippet: string;
   score: number;
 }
@@ -77,96 +77,139 @@ export interface CopilotResponse {
   answer: string;
   citations: Citation[];
   confidence: number;
-  sources_used: number;
+  mode: "llm" | "extractive" | "no_results";
   latency_ms: number;
 }
 
-export interface CopilotStatus {
-  built: boolean;
-  chunk_count: number;
-  embed_model: string;
-  llm_provider: string | null;
-  llm_model: string | null;
-  llm_configured: boolean;
+/* ---- F3 Maintenance & RCA ---- */
+export interface EquipmentHealth {
+  tag: string;
+  readings: number;
+  latest_value: number;
+  latest_date: string;
+  latest_status: string;
+  risk: "tripped" | "alarm" | "watch" | "normal";
+  alarm: number | null;
+  trip: number | null;
 }
 
-export interface ChatMessage {
+export interface TrendPoint {
+  date: string;
+  value: number;
+  status: string;
+}
+
+export interface TrendPrediction {
+  kind: "backtest" | "forecast";
+  predicted_alarm?: string | null;
+  predicted_trip?: string | null;
+  actual_trip?: string;
+  alarm_crossed?: string;
+  lead_days: number | null;
+  note: string;
+}
+
+export interface TrendResponse {
+  tag: string;
+  alarm: number | null;
+  trip: number | null;
+  equipment_type: string;
+  series: TrendPoint[];
+  fit: { slope_per_day: number; r2: number } | null;
+  projection: { date: string; value: number }[];
+  prediction: TrendPrediction | null;
+}
+
+export interface RcaStep {
   id: string;
-  role: "user" | "assistant";
-  content: string;
-  citations?: Citation[];
-  confidence?: number;
-  sources_used?: number;
-  latency_ms?: number;
-  timestamp: number;
+  type: string;
+  key: string;
+  date: string;
+  title: string;
+  status: string;
+  severity: "danger" | "warning" | "info" | "success";
+  overdue: boolean;
 }
 
-/* ------------------------------------------------------------------ */
-/* F4 Compliance types                                                 */
-/* ------------------------------------------------------------------ */
+export interface RcaResponse {
+  tag: string;
+  equipment: Record<string, unknown>;
+  chain: RcaStep[];
+  root_cause: string | null;
+  regulation_gaps: { regulation: string; clause: string; gap_note: string }[];
+  corrective_actions: { key: string; title: string; status: string }[];
+  narrative: string | null;
+  narrative_mode: "llm" | "rule_based";
+}
 
-export interface ComplianceEntry {
+/* ---- F4 Compliance ---- */
+export interface EvidenceItem {
+  id: string;
+  type: string;
+  key: string;
+  role: string;
+  title: string;
+  date: string;
+  status: string;
+  in_graph: boolean;
+}
+
+export interface ComplianceRequirement {
   req_id: string;
   regulation: string;
   clause: string;
   requirement: string;
   applies_to: string;
   linked_procedure: string;
-  evidence: string;
-  status: "GAP" | "COMPLIANT" | "OPEN";
+  status: "GAP" | "COMPLIANT" | "OPEN" | string;
   gap_note: string;
-  graph_edge?: Record<string, unknown>;
+  evidence: EvidenceItem[];
 }
 
-export interface NCRRecord {
-  ncr_id: string;
-  date_raised: string;
-  raised_by: string;
-  severity: string;
-  tag: string;
-  description: string;
-  procedure_breached: string;
-  regulation_breached: string;
-  status: string;
-  linked_capa: string;
-  capa?: CAPARecord | null;
+export interface ComplianceRegister {
+  summary: { total: number; gaps: number; compliant: number; open: number };
+  requirements: ComplianceRequirement[];
 }
 
-export interface CAPARecord {
-  capa_id: string;
-  linked_ncr: string;
-  date_opened: string;
-  capa_type: string;
-  root_cause: string;
-  corrective_action: string;
-  preventive_action: string;
-  owner: string;
-  target_date: string;
-  status: string;
-  ncr?: NCRRecord | null;
+/* ---- F5 Lessons ---- */
+export interface PatternMember {
+  id: string;
+  type: string;
+  key: string;
+  date: string;
+  summary: string;
 }
 
-export interface ComplianceDashboardData {
-  total_requirements: number;
-  gaps: number;
-  compliant: number;
-  open: number;
-  ncr_open: number;
-  capa_open: number;
-  ncr_total: number;
-  capa_total: number;
-  regulation_breakdown: Record<string, { total: number; gap: number; compliant: number; open: number }>;
-  asset_status: Array<{ tag: string; total: number; gap: number; compliant: number; open: number }>;
+export interface Precedent {
+  doc_id: string;
+  title: string;
+  snippet: string;
+  page: number | null;
 }
 
-export interface EvidencePack {
-  equipment_tag: string;
-  compliance_entries: ComplianceEntry[];
-  ncrs: NCRRecord[];
-  capas: CAPARecord[];
-  graph_edges: GraphEdge[];
-  linked_documents: Array<{ doc_id: string; doc_type: string; title: string }>;
-  inspections: GraphNode[];
-  narrative: string;
+export interface FailurePattern {
+  pattern: string;
+  title: string;
+  members: PatternMember[];
+  equipment: string[];
+  at_risk_siblings: {
+    tag: string;
+    risk: string;
+    latest_value: number | null;
+    alarm: number | null;
+  }[];
+  precedents: Precedent[];
 }
 
+export interface LessonsAlert {
+  severity: "warning" | "danger";
+  target: string;
+  pattern: string;
+  title: string;
+  rationale: string;
+  summary: string | null;
+  summary_mode: string;
+  evidence: { id: string; key: string; date: string; summary: string }[];
+  precedents: Precedent[];
+  recommended_action: string;
+}

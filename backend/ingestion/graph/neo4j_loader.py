@@ -30,6 +30,16 @@ def load_graph(graph: dict, reset: bool = False) -> dict | None:
         return None
 
     try:
+        return _load(driver, graph, reset)
+    except Exception as exc:
+        # Aura free instances pause when idle; never fail the ingest over it
+        print(f"[neo4j] unreachable ({type(exc).__name__}) - skipped. "
+              "Resume the Aura instance at console.neo4j.io and re-run.")
+        return None
+
+
+def _load(driver, graph: dict, reset: bool) -> dict:
+    try:
         database = _resolve_database(driver)
         with driver.session(database=database) as session:
             if reset:
