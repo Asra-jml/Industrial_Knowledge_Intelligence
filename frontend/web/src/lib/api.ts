@@ -90,11 +90,14 @@ export async function fetchNCRs(): Promise<{ ncrs: NCRRecord[]; count: number }>
   const res = await fetch(`${API_BASE}/api/compliance/ncr`);
   if (!res.ok) throw new Error(`Failed to fetch NCRs: ${res.status}`);
   return res.json();
+  
 }
 
 export async function fetchCAPAs(): Promise<{ capas: CAPARecord[]; count: number }> {
   const res = await fetch(`${API_BASE}/api/compliance/capa`);
   if (!res.ok) throw new Error(`Failed to fetch CAPAs: ${res.status}`);
+  return res.json();
+}
 export interface LessonsResponse {
   risk: string;
   message: string;

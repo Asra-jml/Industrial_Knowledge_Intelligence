@@ -66,49 +66,24 @@ export default function RCAForm({
 
   return (
 
-    <Card>
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:border-edge-strong">
 
 
-      <CardHeader>
-
-        <div>
-
-          <Badge variant="accent">
-            F3
-          </Badge>
-
-
-          <CardTitle className="mt-3 flex items-center gap-2">
-
-            <Wrench className="h-5 w-5 text-accent" />
-
-            Maintenance Intelligence & RCA
-
-          </CardTitle>
-
-
-
-          <p className="mt-2 text-sm text-muted-foreground">
-
-            Predict failures and identify the real root cause using
-            sensor data, work orders, inspection history and OEM knowledge.
-
-          </p>
-
-
-        </div>
-
-      </CardHeader>
+      <CardHeader className="pb-3">
+      <CardTitle>
+    Analyze Equipment
+      </CardTitle>
+       </CardHeader>
 
 
 
 
-      <CardContent>
+      <CardContent className="pt-2">
 
 
         <form
           onSubmit={submit}
-          className="grid gap-4 md:grid-cols-3"
+          className="grid gap-3 md:grid-cols-3"
         >
 
 
@@ -148,7 +123,7 @@ export default function RCAForm({
 
             disabled={loading}
 
-            className="gap-2"
+            className="gap-2 shadow-sm"
 
           >
 

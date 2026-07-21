@@ -7,43 +7,43 @@ interface Props {
 
 export default function AnalysisSummary({ result }: Props) {
   return (
-    <Card>
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-edge-strong">
       <CardHeader>
         <CardTitle>Maintenance Analysis Summary</CardTitle>
       </CardHeader>
 
-      <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-xs text-dim">Total Work Orders</p>
-          <p className="text-3xl font-bold">
+          <p className="text-3xl font-bold text-fg">
             {result.work_order_analysis.total}
           </p>
         </div>
 
         <div>
           <p className="text-xs text-dim">Preventive</p>
-          <p className="text-3xl font-bold text-green-600">
+          <p className="text-3xl font-bold text-success">
             {result.work_order_analysis.preventive}
           </p>
         </div>
 
         <div>
           <p className="text-xs text-dim">Corrective</p>
-          <p className="text-3xl font-bold text-orange-600">
+          <p className="text-3xl font-bold text-warning">
             {result.work_order_analysis.corrective}
           </p>
         </div>
 
         <div>
           <p className="text-xs text-dim">Overdue</p>
-          <p className="text-3xl font-bold text-red-600">
+          <p className="text-3xl font-bold text-danger">
             {result.work_order_analysis.overdue}
           </p>
         </div>
 
         <div>
           <p className="text-xs text-dim">Repeat Failures</p>
-          <p className="text-2xl font-semibold">
+          <p className="text-2xl font-bold text-fg">
             {result.failure_analysis.repeat_failures}
           </p>
         </div>

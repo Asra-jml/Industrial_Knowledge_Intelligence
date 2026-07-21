@@ -23,13 +23,13 @@ export default function RCACards({
 
   return (
 
-    <div className="mt-6 grid gap-6 lg:grid-cols-3">
+    <div className="mt-6 grid gap-4 lg:grid-cols-3">
 
 
 
       {/* Executive Summary */}
 
-      <Card className="lg:col-span-3">
+     <Card className="lg:col-span-3 border-accent/20 bg-accent/[0.03] transition-all duration-300 hover:border-accent/40">
 
         <CardHeader>
 
@@ -59,7 +59,7 @@ export default function RCACards({
       {/* Root Cause */}
 
 
-      <Card>
+      <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-edge-strong">
 
 
         <CardHeader>
@@ -148,7 +148,7 @@ export default function RCACards({
 
 
 
-      <Card>
+      <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-edge-strong">
 
 
         <CardHeader>
@@ -240,7 +240,7 @@ export default function RCACards({
 
 
 
-      <Card>
+      <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-edge-strong">
 
 
         <CardHeader>
@@ -398,7 +398,7 @@ export default function RCACards({
 
                     <div
                       key={index}
-                      className="rounded-lg border p-4"
+                     className="rounded-lg border border-edge bg-raised p-4 transition-colors hover:border-edge-strong"
                     >
 
 
@@ -504,7 +504,7 @@ export default function RCACards({
 
                     <div
                       key={index}
-                      className="rounded-lg border p-4"
+                      className="rounded-lg border border-edge bg-raised p-4 transition-colors hover:border-edge-strong"
                     >
 
 
@@ -610,7 +610,7 @@ export default function RCACards({
 
                     <div
                       key={index}
-                      className="rounded-lg border p-4"
+                     className="rounded-lg border border-edge bg-raised p-4 transition-colors hover:border-edge-strong"
                     >
 
 
