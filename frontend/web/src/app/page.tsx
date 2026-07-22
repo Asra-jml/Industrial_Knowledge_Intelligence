@@ -19,8 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { BrandMark } from "@/components/shared/Sidebar";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/shared/Reveal";
-import HeroGraph from "@/components/landing/HeroGraph";
+import HeroImageGallery from "@/components/landing/HeroImageGallery";
 import FlowPipeline from "@/components/landing/FlowPipeline";
+import Waves from "@/components/landing/Waves";
+import { FloatingNav } from "@/components/landing/FloatingNav";
+import { GlassButton } from "@/components/ui/GlassButton";
 
 interface Module {
   code: string;
@@ -86,51 +89,36 @@ const METRICS = [
   { value: "11/11", label: "acceptance checks", sub: "verified, repeatable" },
 ];
 
+const navItems = [
+  { name: "Modules", link: "#modules" },
+  { name: "Platform", link: "#platform" },
+  { name: "Metrics", link: "#metrics" },
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-bg text-fg">
       {/* ---------------------------------------------------------- nav */}
-      <header className="sticky top-0 z-50 border-b border-edge bg-bg/80 backdrop-blur-md">
-        <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <BrandMark />
-            <span className="font-display text-[15px] font-semibold tracking-tight">
-              IKI
-            </span>
-          </Link>
-          <div className="hidden items-center gap-5 text-[13px] font-medium text-muted md:flex">
-            <a href="#modules" className="transition-colors hover:text-fg">
-              Modules
-            </a>
-            <a href="#platform" className="transition-colors hover:text-fg">
-              Platform
-            </a>
-            <a href="#metrics" className="transition-colors hover:text-fg">
-              Metrics
-            </a>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <a
-              href="https://github.com/adivish31/iki-corpus"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-medium text-muted transition-colors hover:bg-white/[0.04] hover:text-fg sm:flex"
-            >
-              Corpus
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-            <Link href="/knowledge-graph">
-              <Button size="sm">Open dashboard</Button>
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <FloatingNav navItems={navItems} />
 
       <main>
         {/* ------------------------------------------------------- hero */}
-        <section className="relative overflow-hidden">
-          <div className="grid-bg pointer-events-none absolute inset-0" />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 pb-20 pt-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:pb-28 lg:pt-24">
+        <section className="relative overflow-hidden h-auto min-h-screen pb-20 pt-16 lg:pb-28 lg:pt-24 flex items-center bg-[#050b14]">
+          <Waves
+            lineColor="rgba(59, 130, 246, 0.3)"
+            backgroundColor="transparent"
+            waveSpeedX={0.02}
+            waveSpeedY={0.01}
+            waveAmpX={40}
+            waveAmpY={20}
+            friction={0.9}
+            tension={0.01}
+            maxCursorMove={120}
+            xGap={12}
+            yGap={36}
+            className="z-0"
+          />
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] w-full mt-24">
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -164,22 +152,18 @@ export default function LandingPage() {
               </motion.p>
 
               <motion.div
-                className="mt-8 flex flex-wrap items-center gap-3"
+                className="mt-8 flex flex-wrap items-center gap-4"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.24 }}
               >
-                <Link href="/knowledge-graph">
-                  <Button size="lg">
-                    Explore Knowledge Graph
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/copilot">
-                  <Button size="lg" variant="secondary">
-                    Try Expert Copilot
-                  </Button>
-                </Link>
+                <GlassButton href="/knowledge-graph" variant="primary" width={240} height={50}>
+                  Explore Knowledge Graph
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </GlassButton>
+                <GlassButton href="/copilot" variant="secondary" width={180} height={50}>
+                  Try Expert Copilot
+                </GlassButton>
               </motion.div>
 
               <motion.div
@@ -201,7 +185,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
             >
-              <HeroGraph />
+              <HeroImageGallery />
             </motion.div>
           </div>
         </section>
