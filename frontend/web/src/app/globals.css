@@ -8,15 +8,15 @@
 
 :root {
   /* surfaces */
-  --bg: #0a0b0f;
-  --bg-secondary: #0d0f15;
-  --panel: #11141b;
-  --panel-raised: #151923;
-  --panel-glass: rgba(17, 20, 27, 0.82);
+  --bg: #050b14;
+  --bg-secondary: #08101e;
+  --panel: #0b1527;
+  --panel-raised: #101c33;
+  --panel-glass: rgba(11, 21, 39, 0.82);
 
   /* borders */
-  --border: #1d222d;
-  --border-hover: #2b3342;
+  --border: #1a2a44;
+  --border-hover: #263c60;
 
   /* text */
   --text: #e8ebf1;
@@ -61,8 +61,8 @@
   --color-warning: var(--warning);
   --color-golden: var(--golden);
 
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif;
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+  --font-display: var(--font-ubuntu), var(--font-nunito), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
@@ -83,7 +83,7 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
   font-feature-settings: "cv11", "ss01";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
