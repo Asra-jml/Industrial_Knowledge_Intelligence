@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Eye, EyeOff, Maximize, ServerCrash, Sparkles } from "lucide-react";
+import { ServerCrash, Sparkles, CheckCircle2, ShieldAlert, Settings2 } from "lucide-react";
 import type { GraphData, GraphNode, IngestStatus } from "@/lib/types";
 import { fetchGraph, fetchIngestStatus } from "@/lib/api";
 import { searchNodes, countByType, nHopNeighborhood } from "@/lib/graph-utils";
 import GraphCanvas from "@/components/graph/GraphCanvas";
-import SearchBar from "@/components/graph/SearchBar";
+import SmartSearchBar from "@/components/graph/SmartSearchBar";
 import Legend from "@/components/graph/Legend";
-import NodeDetail from "@/components/graph/NodeDetail";
-import StatsBar from "@/components/graph/StatsBar";
-import { Button } from "@/components/ui/button";
+import NodeInspector from "@/components/graph/NodeInspector";
+import FilterPanel from "@/components/graph/FilterPanel";
+import GraphAnalyticsWidget from "@/components/graph/GraphAnalyticsWidget";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatePresence } from "framer-motion";
 
 export default function KnowledgeGraphPage() {
   const [graph, setGraph] = useState<GraphData | null>(null);
@@ -23,9 +24,9 @@ export default function KnowledgeGraphPage() {
     new Set(["Document", "Person"])
   );
   const [goldenMode, setGoldenMode] = useState(false);
-  const [showDocs, setShowDocs] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(true);
 
   // Load graph data (+ honor ?focus=Node:id deep links from other modules)
   useEffect(() => {
@@ -63,23 +64,6 @@ export default function KnowledgeGraphPage() {
     [graph]
   );
 
-  // Visible counts
-  const visibleCounts = useMemo(() => {
-    if (!graph) return { nodes: 0, edges: 0 };
-    const goldenSet = goldenMode
-      ? nHopNeighborhood("Equipment:P-101", graph.edges)
-      : null;
-
-    const visibleNodes = graph.nodes.filter((n) =>
-      goldenMode ? goldenSet!.has(n.id) : !hiddenTypes.has(n.type)
-    );
-    const visibleIds = new Set(visibleNodes.map((n) => n.id));
-    const visibleEdges = graph.edges.filter(
-      (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
-    );
-    return { nodes: visibleNodes.length, edges: visibleEdges.length };
-  }, [graph, hiddenTypes, goldenMode]);
-
   // Selected node object
   const selectedNode = useMemo<GraphNode | null>(
     () => graph?.nodes.find((n) => n.id === selectedNodeId) ?? null,
@@ -98,91 +82,44 @@ export default function KnowledgeGraphPage() {
 
   // Toggle golden thread
   const handleGoldenToggle = useCallback(() => {
-    setGoldenMode((prev) => {
-      const next = !prev;
-      if (next) {
-        setTimeout(() => {
-          setSelectedNodeId("Equipment:P-101");
-          setFocusNodeId("Equipment:P-101");
-        }, 300);
-      }
-      return next;
-    });
+    setGoldenMode((prev) => !prev);
+    setSelectedNodeId(null);
+    setFocusNodeId(null);
   }, []);
 
-  // Toggle documents visibility
-  const handleDocsToggle = useCallback(() => {
-    setShowDocs((prev) => {
-      const next = !prev;
-      setHiddenTypes((h) => {
-        const updated = new Set(h);
-        if (next) updated.delete("Document");
-        else updated.add("Document");
-        return updated;
-      });
-      return next;
-    });
-  }, []);
-
-  // Search handler
+  // Search logic
   const handleSearch = useCallback(
     (query: string) => {
       if (!graph) return;
-      const hit = searchNodes(graph.nodes, query);
-      if (hit) {
-        setHiddenTypes((prev) => {
-          const next = new Set(prev);
-          next.delete(hit.type);
-          return next;
-        });
-        setSelectedNodeId(hit.id);
-        setFocusNodeId(hit.id);
+      const q = query.trim();
+      if (!q) {
+        setFocusNodeId(null);
+        return;
       }
-    },
-    [graph]
-  );
-
-  // Navigate to node (from NodeDetail)
-  const handleNavigate = useCallback(
-    (nodeId: string) => {
-      if (!graph) return;
-      const node = graph.nodes.find((n) => n.id === nodeId);
-      if (node) {
+      const results = searchNodes(graph.nodes, q);
+      if (results.length > 0) {
+        const top = results[0];
         if (!goldenMode) {
           setHiddenTypes((prev) => {
             const next = new Set(prev);
-            next.delete(node.type);
+            next.delete(top.type);
             return next;
           });
         }
-        setSelectedNodeId(nodeId);
-        setFocusNodeId(nodeId);
+        setSelectedNodeId(top.id);
+        setFocusNodeId(top.id);
       }
     },
     [graph, goldenMode]
   );
 
-  // Fit view
-  const handleFit = useCallback(() => {
-    setFocusNodeId(null);
-  }, []);
-
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col">
-        <div className="flex items-center gap-3 border-b border-edge bg-surface px-4 py-2.5">
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="h-9 w-44" />
-          <Skeleton className="h-9 w-36" />
-          <div className="ml-auto flex gap-2">
-            <Skeleton className="h-7 w-28" />
-            <Skeleton className="h-7 w-28" />
-          </div>
-        </div>
+      <div className="flex flex-1 flex-col bg-[#071321]">
         <div className="flex flex-1 items-center justify-center">
           <div className="space-y-3 text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            <p className="text-sm text-muted">Loading knowledge graph…</p>
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            <p className="text-sm text-blue-200/50">Loading digital twin...</p>
           </div>
         </div>
       </div>
@@ -191,68 +128,65 @@ export default function KnowledgeGraphPage() {
 
   if (error || !graph) {
     return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <div className="max-w-lg rounded-xl border border-edge bg-surface p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-danger/25 bg-danger/10">
-            <ServerCrash className="h-5 w-5 text-danger" />
+      <div className="flex flex-1 items-center justify-center p-6 bg-[#071321]">
+        <div className="max-w-lg rounded-xl border border-white/10 bg-[#0A111A]/80 backdrop-blur-xl p-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10">
+            <ServerCrash className="h-5 w-5 text-red-400" />
           </div>
-          <h2 className="font-display text-lg font-semibold text-fg">
+          <h2 className="font-display text-lg font-semibold text-white">
             Backend unreachable
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{error}</p>
-          <code className="mt-4 block rounded-lg border border-edge bg-bg p-3 font-mono text-[12px] text-accent">
-            uvicorn backend.api.main:app --reload
-          </code>
+          <p className="mt-2 text-sm leading-relaxed text-white/50">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* toolbar */}
-      <div className="z-10 flex flex-wrap items-center gap-2 border-b border-edge bg-surface px-4 py-2.5">
-        <SearchBar onSearch={handleSearch} />
-
-        <Button
-          variant="golden"
-          size="sm"
-          onClick={handleGoldenToggle}
-          className={goldenMode ? "active" : ""}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Golden Thread (P-101)
-        </Button>
-
-        <Button variant="secondary" size="sm" onClick={handleDocsToggle}>
-          {showDocs ? (
-            <EyeOff className="h-3.5 w-3.5" />
-          ) : (
-            <Eye className="h-3.5 w-3.5" />
-          )}
-          {showDocs ? "Hide" : "Show"} documents
-        </Button>
-
-        <Button variant="secondary" size="sm" onClick={handleFit}>
-          <Maximize className="h-3.5 w-3.5" />
-          Fit
-        </Button>
-
-        <div className="ml-auto">
-          <StatsBar
-            status={status}
-            visibleNodes={visibleCounts.nodes}
-            totalNodes={graph.nodes.length}
-            visibleEdges={visibleCounts.edges}
-            totalEdges={graph.edges.length}
-            goldenMode={goldenMode}
-          />
+    <div className="flex flex-col flex-1 overflow-hidden relative bg-[#071321]">
+      
+      {/* Top Command Header */}
+      <div className="h-16 border-b border-white/5 bg-[#0A111A]/90 backdrop-blur-xl flex items-center justify-between px-6 z-30 shrink-0 shadow-lg">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setFilterOpen(!filterOpen)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors">
+              <Settings2 className="w-4 h-4" />
+            </button>
+            <span className="font-display font-semibold text-white tracking-wide">Digital Twin Explorer</span>
+          </div>
+          
+          <div className="hidden xl:flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-[11px] uppercase tracking-wider text-emerald-100/60">Plant Health</span>
+              <span className="text-xs font-mono font-bold text-emerald-400">97%</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-[11px] uppercase tracking-wider text-blue-100/60">Critical Assets</span>
+              <span className="text-xs font-mono font-bold text-blue-400">14</span>
+            </div>
+          </div>
         </div>
+
+        <SmartSearchBar onSearch={handleSearch} />
       </div>
 
-      {/* canvas + inspector */}
-      <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 bg-bg-secondary">
+      <div className="flex flex-1 relative overflow-hidden">
+        
+        {/* Left Filter Panel */}
+        <FilterPanel 
+          isOpen={filterOpen} 
+          setIsOpen={setFilterOpen} 
+          hiddenTypes={hiddenTypes} 
+          onToggleType={handleToggleType} 
+        />
+
+        {/* Main Canvas Area */}
+        <div className="flex-1 relative overflow-hidden bg-[#071321]">
+          {/* Subtle grid background */}
+          <div className="absolute inset-0 pointer-events-none opacity-5 bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          
           <GraphCanvas
             graph={graph}
             hiddenTypes={hiddenTypes}
@@ -261,29 +195,30 @@ export default function KnowledgeGraphPage() {
             onSelectNode={setSelectedNodeId}
             focusNodeId={focusNodeId}
           />
+
+          {/* Floating Analytics Top Right */}
+          <div className="absolute top-6 right-6 z-10">
+            <GraphAnalyticsWidget />
+          </div>
+
+          {/* Legend Bottom Left */}
+          <div className="absolute bottom-6 left-6 z-10 bg-[#0A111A]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl pointer-events-auto overflow-hidden">
+            <Legend typeCounts={typeCounts} hiddenTypes={hiddenTypes} onToggleType={handleToggleType} />
+          </div>
         </div>
 
-        <aside className="panel-transition flex w-[320px] shrink-0 flex-col border-l border-edge bg-surface max-lg:hidden">
-          <div className="max-h-[45%] overflow-y-auto border-b border-edge p-3">
-            <Legend
-              typeCounts={typeCounts}
-              hiddenTypes={hiddenTypes}
-              onToggleType={handleToggleType}
-            />
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-3">
-            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-dim">
-              Inspector
-            </h3>
-            <NodeDetail
-              node={selectedNode}
-              edges={graph.edges}
-              allNodes={graph.nodes}
-              onNavigate={handleNavigate}
-            />
-          </div>
-        </aside>
+        {/* Right Node Inspector */}
+        <AnimatePresence>
+          {selectedNode && (
+            <div className="shrink-0 z-20 h-full">
+              <NodeInspector 
+                node={selectedNode} 
+                onClose={() => setSelectedNodeId(null)} 
+                onGoldenThread={handleGoldenToggle}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
