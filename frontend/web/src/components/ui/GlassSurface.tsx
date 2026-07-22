@@ -85,6 +85,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const blueGradId = `blue-grad-${uniqueId}`;
 
   const [svgSupported, setSvgSupported] = useState<boolean>(false);
+  const [backdropSupported, setBackdropSupported] = useState<boolean>(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const feImageRef = useRef<SVGFEImageElement>(null);
@@ -162,6 +163,11 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
 
   useEffect(() => {
     setSvgSupported(supportsSVGFilters());
+    if (typeof CSS !== 'undefined' && CSS.supports) {
+      setBackdropSupported(CSS.supports('backdrop-filter', 'blur(10px)'));
+    } else {
+      setBackdropSupported(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -190,10 +196,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     return div.style.backdropFilter !== '';
   };
 
-  const supportsBackdropFilter = () => {
-    if (typeof window === 'undefined') return false;
-    return CSS.supports('backdrop-filter', 'blur(10px)');
-  };
+  // supportsBackdropFilter logic moved to useEffect state to prevent hydration mismatches
 
   const getContainerStyles = (): React.CSSProperties => {
     const baseStyles: React.CSSProperties = {
@@ -201,11 +204,9 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       width: typeof width === 'number' ? `${width}px` : width,
       height: typeof height === 'number' ? `${height}px` : height,
       borderRadius: `${borderRadius}px`,
-      '--glass-frost': backgroundOpacity,
-      '--glass-saturation': saturation
+      '--glass-frost': String(backgroundOpacity),
+      '--glass-saturation': String(saturation)
     } as React.CSSProperties;
-
-    const backdropFilterSupported = supportsBackdropFilter();
 
     if (svgSupported) {
       return {
@@ -232,7 +233,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       };
     } else {
       if (isDarkMode) {
-        if (!backdropFilterSupported) {
+        if (!backdropSupported) {
           return {
             ...baseStyles,
             background: 'rgba(0, 0, 0, 0.4)',
@@ -252,7 +253,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
           };
         }
       } else {
-        if (!backdropFilterSupported) {
+        if (!backdropSupported) {
           return {
             ...baseStyles,
             background: 'rgba(255, 255, 255, 0.4)',

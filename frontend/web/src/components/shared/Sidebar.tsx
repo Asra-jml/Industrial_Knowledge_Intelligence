@@ -114,7 +114,7 @@ export default function Sidebar() {
           <BrandMark />
           <div className="leading-none">
             <div className="font-display text-[15px] font-semibold tracking-tight">
-              IKI
+              AssetAtlas
             </div>
             <div className="mt-0.5 text-[10px] font-medium tracking-wide text-dim">
               INDUSTRIAL INTELLIGENCE

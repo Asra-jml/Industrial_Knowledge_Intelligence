@@ -21,9 +21,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IKI — Industrial Knowledge Intelligence",
+  title: "AssetAtlas — Industrial Knowledge Intelligence",
   description:
-    "The unified asset & operations brain. IKI ingests engineering drawings, maintenance records, regulatory documents and incident reports into one queryable knowledge graph.",
+    "The unified asset & operations brain. AssetAtlas ingests engineering drawings, maintenance records, regulatory documents and incident reports into one queryable knowledge graph.",
 };
 
 export default function RootLayout({

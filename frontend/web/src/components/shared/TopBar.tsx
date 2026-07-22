@@ -42,7 +42,7 @@ export default function TopBar() {
             href="/"
             className="hidden font-display font-semibold tracking-tight text-muted transition-colors hover:text-fg sm:block"
           >
-            IKI
+            AssetAtlas
           </Link>
           <ChevronRight className="hidden h-3.5 w-3.5 text-dim sm:block" />
           <span className="truncate font-medium text-fg">
@@ -132,7 +132,7 @@ export default function TopBar() {
                   onClick={() => setMobileOpen(false)}
                 >
                   <BrandMark />
-                  <span className="font-display text-[15px] font-semibold">IKI</span>
+                  <span className="font-display text-[15px] font-semibold">AssetAtlas</span>
                 </Link>
                 <button
                   className="rounded-lg p-1.5 text-muted hover:text-fg"

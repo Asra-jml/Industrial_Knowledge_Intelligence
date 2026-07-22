@@ -41,7 +41,7 @@ export const FloatingNav = ({
       >
         <div className="flex pr-2 pl-8 py-2 items-center justify-center space-x-4 w-full h-full">
           <Link href="/" className="font-display font-bold text-white mr-4">
-            IKI
+            AssetAtlas
           </Link>
           {navItems.map((navItem: any, idx: number) => (
             <Link
