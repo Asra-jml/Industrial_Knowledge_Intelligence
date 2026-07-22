@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 /**
  * Animated rendition of the real P-101 "golden thread" from the corpus:
- * the failure chain IKI connects across inspections, work orders, emails,
+ * the failure chain AssetAtlas connects across inspections, work orders, emails,
  * incident records and regulations. Handcrafted SVG — no stock art.
  */
 
