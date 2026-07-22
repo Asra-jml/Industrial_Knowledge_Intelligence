@@ -48,6 +48,7 @@ export default function BentoStats() {
       isLarge: true,
       icon: <Network className="h-5 w-5" />,
       color: "blue",
+      svg: "/100_golden_thread.svg",
     },
     {
       value: "12 s",
@@ -58,6 +59,7 @@ export default function BentoStats() {
       isLarge: false,
       icon: <Zap className="h-5 w-5" />,
       color: "indigo",
+      svg: "/12s_ingest.svg",
     },
     {
       value: "12",
@@ -68,6 +70,7 @@ export default function BentoStats() {
       isLarge: false,
       icon: <FileBox className="h-5 w-5" />,
       color: "purple",
+      svg: "/12_document_types.svg",
     },
     {
       value: "11/11",
@@ -78,6 +81,7 @@ export default function BentoStats() {
       isLarge: true,
       icon: <ShieldCheck className="h-5 w-5" />,
       color: "green",
+      svg: "/11_acceptance_check.svg",
     },
   ];
 
@@ -100,6 +104,18 @@ export default function BentoStats() {
 
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-accent/10 transition-colors duration-500" />
+
+          {/* Industrial Illustration */}
+          {card.svg && (
+            <div className="absolute right-0 bottom-0 w-[55%] h-auto opacity-[0.35] mix-blend-plus-lighter pointer-events-none z-0 translate-x-4 translate-y-4">
+              <img 
+                src={card.svg} 
+                alt="" 
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#040e1b] via-[#040e1b]/40 to-transparent pointer-events-none" />
+            </div>
+          )}
 
           <div className="relative z-10">
              <SingleGlassIcon icon={card.icon} color={card.color} />
