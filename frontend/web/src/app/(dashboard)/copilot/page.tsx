@@ -144,8 +144,9 @@ export default function CopilotPage() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col relative bg-[#071321]">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] mix-blend-screen z-0" style={{ backgroundImage: 'url(/35_engineer.svg)', backgroundPosition: 'bottom right', backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }} />
+      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto">
         {turns.length === 0 ? (
           /* empty state */
           <CommandCenterDashboard onAsk={send} busy={busy} />
@@ -161,7 +162,7 @@ export default function CopilotPage() {
                 </div>
 
                 {turn.error ? (
-                  <div className="rounded-xl border border-danger/25 bg-danger/[0.06] p-4 text-[13px] text-danger">
+                  <div className="rounded-xl border border-danger/25 bg-danger/6 p-4 text-[13px] text-danger">
                     {turn.error}
                   </div>
                 ) : !turn.response ? (
@@ -232,14 +233,14 @@ export default function CopilotPage() {
             }}
             rows={1}
             placeholder="Ask about equipment, inspections, regulations…"
-            className="max-h-32 min-h-[42px] flex-1 resize-none rounded-xl border border-edge bg-bg px-4 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none"
+            className="max-h-32 min-h-10.5 flex-1 resize-none rounded-xl border border-edge bg-bg px-4 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none"
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
             aria-label="Send"
             className={cn(
-              "flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl transition-all",
+              "flex h-10.5 w-10.5 shrink-0 items-center justify-center rounded-xl transition-all",
               busy || !input.trim()
                 ? "cursor-not-allowed border border-edge bg-raised text-dim"
                 : "bg-accent text-[#06070a] hover:bg-accent-hover"

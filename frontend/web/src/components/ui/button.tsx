@@ -11,7 +11,7 @@ const variantClasses: Record<Variant, string> = {
     "bg-raised text-fg border border-edge hover:border-edge-strong hover:bg-[#1a1f2b]",
   outline:
     "border border-edge bg-transparent text-muted hover:text-fg hover:border-edge-strong",
-  ghost: "text-muted hover:text-fg hover:bg-white/[0.04]",
+  ghost: "text-muted hover:text-fg hover:bg-white/4",
   golden: "golden-btn",
 };
 

@@ -37,7 +37,7 @@ export default function NodeInspector({ node, onClose, onGoldenThread }: Props) 
         </button>
         <div className="text-[10px] uppercase tracking-widest text-blue-400 font-mono mb-2">{node.type}</div>
         <h2 className="font-display text-2xl font-semibold text-white mb-6 break-words pr-8">
-          {node.props?.title || node.id.split(":")[1] || node.id}
+          {typeof node.props?.title === 'string' ? node.props.title : (node.id.split(":")[1] || node.id)}
         </h2>
 
         {/* Health / Main Metric */}
@@ -68,7 +68,7 @@ export default function NodeInspector({ node, onClose, onGoldenThread }: Props) 
           <div>
             <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Properties</h3>
             <div className="space-y-2">
-              {Object.entries(node.props).map(([k, v]) => (
+              {Object.entries(node.props || {}).map(([k, v]) => (
                 <div key={k} className="flex flex-col">
                   <span className="text-[10px] text-white/40 uppercase font-mono">{k}</span>
                   <span className="text-sm text-white/90 break-words">{String(v)}</span>

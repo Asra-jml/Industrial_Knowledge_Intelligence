@@ -246,8 +246,8 @@ export default function CommandCenterDashboard({ onAsk, busy }: Props) {
               <div className="relative border-l border-white/10 ml-3 space-y-6">
                 {ACTIVITY_FEED.map((item, i) => (
                   <div key={i} className="relative pl-6">
-                    <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#071321] border border-blue-400" />
-                    {i === 0 && <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-400 animate-ping" />}
+                    <div className="absolute -left-1.25 top-1.5 w-2.5 h-2.5 rounded-full bg-[#071321] border border-blue-400" />
+                    {i === 0 && <div className="absolute -left-1.25 top-1.5 w-2.5 h-2.5 rounded-full bg-blue-400 animate-ping" />}
                     <div className="text-xs text-blue-300 mb-1">{item.time}</div>
                     <div className="text-sm text-white/70 flex items-center gap-2">
                       <item.icon className="w-4 h-4 text-white/40" /> {item.text}

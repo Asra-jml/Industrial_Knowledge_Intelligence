@@ -96,9 +96,8 @@ export default function KnowledgeGraphPage() {
         setFocusNodeId(null);
         return;
       }
-      const results = searchNodes(graph.nodes, q);
-      if (results.length > 0) {
-        const top = results[0];
+      const top = searchNodes(graph.nodes, q);
+      if (top) {
         if (!goldenMode) {
           setHiddenTypes((prev) => {
             const next = new Set(prev);
@@ -144,7 +143,7 @@ export default function KnowledgeGraphPage() {
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden relative bg-[#071321]">
-      
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] mix-blend-screen z-0" style={{ backgroundImage: 'url(/12s_ingest.svg)', backgroundPosition: 'bottom right', backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }} />
       {/* Top Command Header */}
       <div className="h-16 border-b border-white/5 bg-[#0A111A]/90 backdrop-blur-xl flex items-center justify-between px-6 z-30 shrink-0 shadow-lg">
         <div className="flex items-center gap-8">

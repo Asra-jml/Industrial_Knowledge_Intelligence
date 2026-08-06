@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle, CalendarClock, GitBranch, ShieldAlert, Sparkles, TrendingUp,
-  Activity, CheckCircle2, AlertCircle, Search, FileText, ArrowRight, Settings, Info
+  Activity, CheckCircle2, AlertCircle, Search, FileText, ArrowRight, Settings, Info, ServerCrash
 } from "lucide-react";
 import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
@@ -150,8 +150,9 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div className="flex-1 h-full overflow-y-auto bg-[#071321] custom-scrollbar pb-20">
-      
+    <div className="flex-1 h-full overflow-y-auto bg-[#071321] custom-scrollbar pb-20 relative">
+      <div className="fixed top-0 right-0 w-3/4 h-screen pointer-events-none opacity-[0.05] mix-blend-screen z-0" style={{ backgroundImage: 'url(/100_golden_thread.svg)', backgroundPosition: 'bottom right', backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }} />
+      <div className="relative z-10">
       {/* Header Area */}
       <div className="sticky top-0 z-30 bg-[#0A111A]/80 backdrop-blur-xl border-b border-white/5 pt-6 pb-4 px-8">
         <div className="flex items-center gap-3 mb-6">
@@ -176,7 +177,7 @@ export default function MaintenancePage() {
                     "relative flex items-center justify-between min-w-[180px] p-3 rounded-xl border transition-all duration-300",
                     active
                       ? "border-blue-500/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-                      : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20"
+                      : "border-white/10 bg-white/2 hover:bg-white/4 hover:border-white/20"
                   )}
                 >
                   <div className="flex flex-col items-start gap-1">
@@ -355,10 +356,10 @@ export default function MaintenancePage() {
                       {rca.chain.map((step, i) => (
                         <div key={step.id} className="relative group">
                           {i < rca.chain.length - 1 && (
-                            <div className="absolute left-[5px] top-6 bottom-[-24px] w-px bg-white/10" />
+                            <div className="absolute left-1.25 top-6 bottom-[-24px] w-px bg-white/10" />
                           )}
                           <div className={cn(
-                            "absolute -left-[5px] top-1.5 w-3 h-3 rounded-full border-2 border-[#0A111A]",
+                            "absolute -left-1.25 top-1.5 w-3 h-3 rounded-full border-2 border-[#0A111A]",
                             step.severity === 'danger' ? 'bg-red-500' : step.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-500',
                             step.overdue && 'animate-pulse ring-4 ring-amber-500/20'
                           )} />
@@ -464,6 +465,7 @@ export default function MaintenancePage() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );

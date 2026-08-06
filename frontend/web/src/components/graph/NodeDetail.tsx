@@ -85,7 +85,7 @@ export default function NodeDetail({
         <h4 className="text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-semibold mb-2">
           Relationships ({nodeEdges.length})
         </h4>
-        <div className="space-y-1 max-h-[280px] overflow-y-auto">
+        <div className="space-y-1 max-h-70 overflow-y-auto">
           {nodeEdges.slice(0, 60).map((e, i) => {
             const otherId = e.source === node.id ? e.target : e.source;
             const dir = e.source === node.id ? "→" : "←";
