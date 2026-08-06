@@ -13,7 +13,7 @@ export default function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto flex flex-col">
           {children}
         </main>
       </div>

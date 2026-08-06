@@ -73,7 +73,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
               isActive
                 ? "text-fg"
-                : "text-dim hover:bg-white/[0.03] hover:text-muted"
+                : "text-dim hover:bg-white/3 hover:text-muted"
             )}
           >
             {isActive && (

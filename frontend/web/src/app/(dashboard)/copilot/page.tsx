@@ -17,6 +17,7 @@ import type { Citation, CopilotResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import CommandCenterDashboard from "@/components/copilot/CommandCenterDashboard";
 
 interface Turn {
   question: string;
@@ -143,41 +144,12 @@ export default function CopilotPage() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col relative bg-[#071321]">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] mix-blend-screen z-0" style={{ backgroundImage: 'url(/35_engineer.svg)', backgroundPosition: 'bottom right', backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }} />
+      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto">
         {turns.length === 0 ? (
           /* empty state */
-          <div className="relative flex h-full flex-col items-center justify-center px-6">
-            <div className="grid-bg pointer-events-none absolute inset-0 opacity-40" />
-            <motion.div
-              className="relative w-full max-w-xl text-center"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10">
-                <MessagesSquare className="h-5 w-5 text-accent" />
-              </span>
-              <h1 className="font-display text-2xl font-semibold tracking-tight">
-                Ask the plant anything
-              </h1>
-              <p className="mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-muted">
-                Answers are grounded in 8,050 indexed passages across manuals,
-                work orders, inspections, emails and regulations — every claim cited.
-              </p>
-              <div className="mt-8 grid gap-2 sm:grid-cols-2">
-                {suggestions.slice(0, 6).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="rounded-lg border border-edge bg-surface px-3.5 py-2.5 text-left text-[13px] text-muted transition-all hover:border-accent/30 hover:text-fg"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+          <CommandCenterDashboard onAsk={send} busy={busy} />
         ) : (
           /* conversation */
           <div className="mx-auto max-w-3xl space-y-8 px-6 py-8">
@@ -190,7 +162,7 @@ export default function CopilotPage() {
                 </div>
 
                 {turn.error ? (
-                  <div className="rounded-xl border border-danger/25 bg-danger/[0.06] p-4 text-[13px] text-danger">
+                  <div className="rounded-xl border border-danger/25 bg-danger/6 p-4 text-[13px] text-danger">
                     {turn.error}
                   </div>
                 ) : !turn.response ? (
@@ -261,14 +233,14 @@ export default function CopilotPage() {
             }}
             rows={1}
             placeholder="Ask about equipment, inspections, regulations…"
-            className="max-h-32 min-h-[42px] flex-1 resize-none rounded-xl border border-edge bg-bg px-4 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none"
+            className="max-h-32 min-h-10.5 flex-1 resize-none rounded-xl border border-edge bg-bg px-4 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none"
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
             aria-label="Send"
             className={cn(
-              "flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl transition-all",
+              "flex h-10.5 w-10.5 shrink-0 items-center justify-center rounded-xl transition-all",
               busy || !input.trim()
                 ? "cursor-not-allowed border border-edge bg-raised text-dim"
                 : "bg-accent text-[#06070a] hover:bg-accent-hover"

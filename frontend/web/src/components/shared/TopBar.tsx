@@ -29,7 +29,7 @@ export default function TopBar() {
       <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-edge bg-surface px-4">
         {/* mobile nav trigger */}
         <button
-          className="rounded-lg p-1.5 text-muted transition-colors hover:bg-white/[0.04] hover:text-fg lg:hidden"
+          className="rounded-lg p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-fg lg:hidden"
           onClick={() => setMobileOpen(true)}
           aria-label="Open navigation"
         >
@@ -95,7 +95,7 @@ export default function TopBar() {
         </div>
 
         <button
-          className="relative rounded-lg p-2 text-muted transition-colors hover:bg-white/[0.04] hover:text-fg"
+          className="relative rounded-lg p-2 text-muted transition-colors hover:bg-white/4 hover:text-fg"
           aria-label="Notifications"
         >
           <Bell className="h-4 w-4" />
