@@ -194,10 +194,12 @@ export default function StickyFeatureScroll() {
     return () => clearInterval(timer);
   }, [activeFeatureIndex]);
 
-  // Reset image index when scrolling to a new feature
-  useEffect(() => {
-    setCurrentImageIndex(0);
-  }, [activeFeatureIndex]);
+  const handleSetActiveFeatureIndex = (index: number) => {
+    if (activeFeatureIndex !== index) {
+      setActiveFeatureIndex(index);
+      setCurrentImageIndex(0);
+    }
+  };
 
   return (
     <section id="modules" className="mx-auto max-w-7xl px-6 py-24 md:py-32 relative">
@@ -265,7 +267,7 @@ export default function StickyFeatureScroll() {
                 index={i}
                 feature={feature}
                 isActive={activeFeatureIndex === i}
-                setActiveIndex={setActiveFeatureIndex}
+                setActiveIndex={handleSetActiveFeatureIndex}
               />
             ))}
           </div>
