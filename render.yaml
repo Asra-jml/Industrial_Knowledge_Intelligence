@@ -1,0 +1,35 @@
+# Render deployment — https://render.com
+# Render auto-detects this file from your GitHub repo.
+# Go to render.com → New → Blueprint → connect your repo.
+#
+# Environment variables to set in the dashboard:
+#   GROQ_API_KEY, NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NEO4J_DATABASE
+
+services:
+  - type: web
+    name: iki-api
+    runtime: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python -m spacy download en_core_web_sm
+      rm -rf data/corpus
+      git clone https://github.com/adivish31/iki-corpus data/corpus
+    startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: CORPUS_ROOT
+        value: /opt/render/project/src/data/corpus
+      - key: SHARED_DIR
+        value: /opt/render/project/src/data/corpus/shared
+      - key: GROQ_API_KEY
+        sync: false
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USERNAME
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: NEO4J_DATABASE
+        sync: false
+    healthCheckPath: /health

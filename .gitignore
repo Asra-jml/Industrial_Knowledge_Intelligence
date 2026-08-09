@@ -22,3 +22,7 @@ node_modules/
 # OS
 Thumbs.db
 .DS_Store
+
+# Docker (build artifacts)
+docker-compose.override.yml
+
