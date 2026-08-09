@@ -8,20 +8,50 @@ import {
 } from "lucide-react";
 import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
-  Tooltip, XAxis, YAxis, ReferenceArea, Dot
+  Tooltip, XAxis, YAxis, ReferenceArea
 } from "recharts";
 import { fetchRcaAnalysis, fetchRcaEquipment, fetchRcaTrend } from "@/lib/api";
 import type { EquipmentHealth, RcaResponse, TrendResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GlassButton } from "@/components/ui/GlassButton";
+import type { LucideIcon } from "lucide-react";
 
-const RISK_MAP: Record<string, { label: string; icon: any; color: string; bg: string; text: string }> = {
+const RISK_MAP: Record<string, { label: string; icon: LucideIcon; color: string; bg: string; text: string }> = {
   tripped: { label: "Critical", icon: AlertTriangle, color: "var(--danger)", bg: "bg-red-500/10", text: "text-red-400" },
   alarm: { label: "Alarm", icon: AlertCircle, color: "var(--danger)", bg: "bg-red-500/10", text: "text-red-400" },
   watch: { label: "Watch", icon: Activity, color: "var(--warning)", bg: "bg-amber-500/10", text: "text-amber-400" },
   normal: { label: "Healthy", icon: CheckCircle2, color: "var(--success)", bg: "bg-emerald-500/10", text: "text-emerald-400" },
 };
+
+function EquipmentButton({ eq, isActive, onClick }: { eq: EquipmentHealth; isActive: boolean; onClick: () => void }) {
+  const [health] = useState(() => Math.floor(Math.random() * 40 + 40));
+  const rInfo = RISK_MAP[eq.risk] ?? RISK_MAP.normal;
+  const RIcon = rInfo.icon;
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "relative flex items-center justify-between min-w-[180px] p-3 rounded-xl border transition-all duration-300",
+        isActive
+          ? "border-blue-500/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
+          : "border-white/10 bg-white/2 hover:bg-white/4 hover:border-white/20"
+      )}
+    >
+      <div className="flex flex-col items-start gap-1">
+        <span className="font-mono text-sm font-semibold text-white">{eq.tag}</span>
+        <div className="flex items-center gap-1.5">
+          <RIcon className={cn("w-3 h-3", rInfo.text)} />
+          <span className={cn("text-[10px] uppercase tracking-wider font-semibold", rInfo.text)}>{rInfo.label}</span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        <span className="text-[10px] text-white/40 uppercase tracking-widest">Health</span>
+        <span className="text-sm font-mono font-bold text-white">{health}%</span>
+      </div>
+    </button>
+  );
+}
 
 function TrendChart({ trend }: { trend: TrendResponse }) {
   const data = useMemo(() => {
@@ -165,35 +195,14 @@ export default function MaintenancePage() {
           {equipment === null ? (
             Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-40 rounded-xl" />)
           ) : (
-            equipment.map((eq) => {
-              const rInfo = RISK_MAP[eq.risk] ?? RISK_MAP.normal;
-              const RIcon = rInfo.icon;
-              const active = eq.tag === tag;
-              return (
-                <button
-                  key={eq.tag}
-                  onClick={() => setTag(eq.tag)}
-                  className={cn(
-                    "relative flex items-center justify-between min-w-[180px] p-3 rounded-xl border transition-all duration-300",
-                    active
-                      ? "border-blue-500/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)]"
-                      : "border-white/10 bg-white/2 hover:bg-white/4 hover:border-white/20"
-                  )}
-                >
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="font-mono text-sm font-semibold text-white">{eq.tag}</span>
-                    <div className="flex items-center gap-1.5">
-                      <RIcon className={cn("w-3 h-3", rInfo.text)} />
-                      <span className={cn("text-[10px] uppercase tracking-wider font-semibold", rInfo.text)}>{rInfo.label}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] text-white/40 uppercase tracking-widest">Health</span>
-                    <span className="text-sm font-mono font-bold text-white">{Math.floor(Math.random() * 40 + 40)}%</span>
-                  </div>
-                </button>
-              );
-            })
+            equipment.map((eq) => (
+                <EquipmentButton 
+                  key={eq.tag} 
+                  eq={eq} 
+                  isActive={eq.tag === tag} 
+                  onClick={() => setTag(eq.tag)} 
+                />
+            ))
           )}
         </div>
       </div>

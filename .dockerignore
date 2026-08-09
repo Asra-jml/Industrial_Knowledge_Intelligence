@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# Frontend (built separately)
+frontend/
+
+# Ultralytics model artifacts
+runs/
+*.pt
+backend/cv/dataset/
+backend/cv/*.log
+backend/cv/samples/
+
+# Data files (mounted as volume instead)
+# SharedCorpus/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Docs
+*.md
+!README.md
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore

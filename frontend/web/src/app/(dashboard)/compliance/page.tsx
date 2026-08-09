@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronRight, FileCheck, FileWarning, ScrollText, ShieldCheck,
+  FileCheck, ScrollText, ShieldCheck,
   Sparkles, Search, Filter, X, ArrowUp, ArrowDown, Activity, CheckCircle2,
-  AlertTriangle, Clock, ArrowRight, ShieldAlert, AlertCircle, CalendarClock,
+  AlertTriangle, Clock, ArrowRight, ShieldAlert, CalendarClock,
   History, GitMerge
 } from "lucide-react";
 import { fetchComplianceNarrative, fetchComplianceRegister } from "@/lib/api";
@@ -20,7 +20,16 @@ const STATUS_BADGE: Record<string, { label: string; color: string; bg: string }>
   OPEN: { label: "Pending Review", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
 };
 
-function KPICard({ label, value, sub, trend, trendUp, colorClass }: any) {
+interface KPICardProps {
+  label: string;
+  value: string | number;
+  sub?: string;
+  trend?: string;
+  trendUp?: boolean;
+  colorClass?: string;
+}
+
+function KPICard({ label, value, sub, trend, trendUp, colorClass }: KPICardProps) {
   return (
     <div className="rounded-2xl border border-white/5 bg-[#0A111A]/60 backdrop-blur-md p-5 flex flex-col justify-between relative overflow-hidden group hover:bg-white/4 transition-colors">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-16 translate-x-16 blur-2xl pointer-events-none" />

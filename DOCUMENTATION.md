@@ -257,3 +257,61 @@ token budgets.
 - `eval/benchmark_questions.md` referenced by the PRD does not exist in the corpus yet —
   must be authored before F2 scoring.
 - Synthetic operational records are clearly labelled (see corpus `DATA_PROVENANCE.md`).
+
+## 9. Deployment
+
+IKI supports three deployment modes: local Docker Compose, cloud (Vercel + Railway/Render),
+and hybrid. All modes use the same codebase — the only difference is where `.env` variables
+are set.
+
+### 9.1 Docker Compose (local production)
+
+```powershell
+# Build and start both services
+docker compose up --build
+
+# API: http://localhost:8000/health
+# Web: http://localhost:3000
+```
+
+Requirements: Docker Desktop running, `SharedCorpus/` adjacent to this repo.
+The API container mounts `SharedCorpus/` as a volume and includes Tesseract OCR.
+
+### 9.2 Vercel (frontend)
+
+```bash
+cd frontend/web
+npx -y vercel --prod
+```
+
+Set `NEXT_PUBLIC_API_URL` to the backend's public URL in Vercel → Settings → Environment Variables.
+
+### 9.3 Railway / Render (backend)
+
+**Railway:**
+```bash
+npx -y @railway/cli login
+npx -y @railway/cli up
+```
+
+**Render:** Push to GitHub — Render auto-detects `render.yaml` and deploys.
+
+Both read the `Procfile` and start uvicorn. Set env vars (`GROQ_API_KEY`,
+`NEO4J_URI/USERNAME/PASSWORD`, `CORPUS_ROOT`) in the platform dashboard.
+
+### 9.4 CI/CD
+
+GitHub Actions runs on every push/PR (`.github/workflows/ci.yml`):
+- Backend: `pytest tests/ -v`
+- Frontend: `npm run build` + `npm run lint`
+
+### 9.5 Production-readiness features
+
+| Feature | Implementation |
+|---|---|
+| Request logging | `main.py` middleware — logs method, path, status, latency on every request |
+| Health check | `GET /health` — reports uptime, LLM availability, Neo4j status |
+| Docker health probe | `HEALTHCHECK` in Dockerfile, `condition: service_healthy` in Compose |
+| Graceful degradation | Every LLM feature has a deterministic fallback (no key → rule-based mode) |
+| Startup diagnostics | API logs corpus path, LLM provider, and Neo4j status on boot |
+| CI pipeline | Automated tests + build on every push |

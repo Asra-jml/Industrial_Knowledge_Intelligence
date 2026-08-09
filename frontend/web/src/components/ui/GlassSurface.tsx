@@ -47,11 +47,14 @@ const useDarkMode = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDark(mediaQuery.matches);
+    const timeout = setTimeout(() => setIsDark(mediaQuery.matches), 0);
 
     const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
     mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
+    return () => {
+      clearTimeout(timeout);
+      mediaQuery.removeEventListener('change', handler);
+    };
   }, []);
 
   return isDark;
@@ -161,13 +164,29 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     mixBlendMode
   ]);
 
-  useEffect(() => {
-    setSvgSupported(supportsSVGFilters());
-    if (typeof CSS !== 'undefined' && CSS.supports) {
-      setBackdropSupported(CSS.supports('backdrop-filter', 'blur(10px)'));
-    } else {
-      setBackdropSupported(false);
+  const supportsSVGFilters = () => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return false;
     }
+    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const isFirefox = /Firefox/.test(navigator.userAgent);
+    if (isWebkit || isFirefox) return false;
+
+    const div = document.createElement('div');
+    div.style.backdropFilter = `url(#${filterId})`;
+    return div.style.backdropFilter !== '';
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSvgSupported(supportsSVGFilters());
+      if (typeof CSS !== 'undefined' && CSS.supports) {
+        setBackdropSupported(CSS.supports('backdrop-filter', 'blur(10px)'));
+      } else {
+        setBackdropSupported(false);
+      }
+    }, 0);
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
@@ -182,19 +201,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   useEffect(() => {
     setTimeout(updateDisplacementMap, 0);
   }, [width, height]);
-
-  const supportsSVGFilters = () => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      return false;
-    }
-    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    const isFirefox = /Firefox/.test(navigator.userAgent);
-    if (isWebkit || isFirefox) return false;
-
-    const div = document.createElement('div');
-    div.style.backdropFilter = `url(#${filterId})`;
-    return div.style.backdropFilter !== '';
-  };
 
   // supportsBackdropFilter logic moved to useEffect state to prevent hydration mismatches
 

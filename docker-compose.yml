@@ -1,0 +1,49 @@
+# IKI — Docker Compose for local containerized deployment
+# Run: docker compose up --build
+#
+# Prerequisites:
+#   - Place SharedCorpus next to this repo (../SharedCorpus)
+#   - Copy .env.example → .env and fill in keys
+#
+# Services:
+#   api  — FastAPI backend (F1–F5) on :8000
+#   web  — Next.js frontend on :3000
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iki-api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - CORPUS_ROOT=/corpus
+      - SHARED_DIR=/corpus/shared
+      - TESSERACT_CMD=tesseract
+    volumes:
+      - type: bind
+        source: ../SharedCorpus
+        target: /corpus
+        read_only: false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile
+    container_name: iki-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
