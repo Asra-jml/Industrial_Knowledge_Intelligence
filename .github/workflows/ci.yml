@@ -13,6 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Checkout SharedCorpus
+        uses: actions/checkout@v4
+        with:
+          repository: adivish31/iki-corpus
+          path: SharedCorpus
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,6 +30,8 @@ jobs:
           python -m spacy download en_core_web_sm
 
       - name: Run tests
+        env:
+          CORPUS_ROOT: ${{ github.workspace }}/SharedCorpus
         run: pytest tests/ -v --tb=short
 
       - name: Lint check

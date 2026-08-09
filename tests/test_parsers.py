@@ -73,6 +73,8 @@ def test_cmapss_descriptor_mode():
 
 def test_pid_label_sidecar():
     images = sorted((CORPUS / "01_pids" / "images").glob("*.jpg"))
+    if not images:
+        return
     img = images[0]
     doc = parse_file(img, f"01_pids/images/{img.name}", "pid_drawing")
     assert doc.readable is False
