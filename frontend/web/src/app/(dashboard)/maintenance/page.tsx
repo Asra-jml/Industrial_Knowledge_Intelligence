@@ -195,15 +195,14 @@ export default function MaintenancePage() {
           {equipment === null ? (
             Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-40 rounded-xl" />)
           ) : (
-            equipment.map((eq) => {
+            equipment.map((eq) => (
                 <EquipmentButton 
                   key={eq.tag} 
                   eq={eq} 
-                  isActive={active} 
+                  isActive={eq.tag === tag} 
                   onClick={() => setTag(eq.tag)} 
                 />
-              );
-            })
+            ))
           )}
         </div>
       </div>
